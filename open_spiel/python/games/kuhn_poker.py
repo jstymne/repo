@@ -165,7 +165,7 @@ class KuhnPokerState(pyspiel.State):
     """String for debug purposes. No particular semantics are required."""
     return "".join([str(c) for c in self.cards] + ["pb"[b] for b in self.bets])
 
-
+  
 class KuhnPokerObserver:
   """Observer, conforming to the PyObserver interface (see observation.py)."""
 

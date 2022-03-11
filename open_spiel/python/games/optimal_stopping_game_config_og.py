@@ -123,9 +123,9 @@ class OptimalStoppingGameConfig:
         return pyspiel.GameType(
             short_name="python_optimal_stopping_game",
             long_name="Python Optimal Stopping Game",
-            dynamics=pyspiel.GameType.Dynamics.SEQUENTIAL,
+            dynamics=pyspiel.GameType.Dynamics.SIMULTANEOUS,
             chance_mode=pyspiel.GameType.ChanceMode.EXPLICIT_STOCHASTIC,
-            information=pyspiel.GameType.Information.IMPERFECT_INFORMATION,
+            information=pyspiel.GameType.Information.PERFECT_INFORMATION,
             utility=pyspiel.GameType.Utility.ZERO_SUM,
             reward_model=pyspiel.GameType.RewardModel.REWARDS,
             max_num_players=self.num_players,

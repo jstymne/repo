@@ -27,17 +27,14 @@ class OptimalStoppingGameState(pyspiel.State):
         self._returns = np.zeros(config.num_players)
         self.intrusion = 0
         self.l = config.L
+        self.latest_obs = 0
         self.latest_actions = []
-        self.latest_attacker_action = 0
-        self.latest_defender_action = 0
         self.b1 = config.initial_belief
-
         self.pi_2 = [
                 [0.5,0.5],
                 [0.5,0.5],
                 [0.5,0.5]
             ]
-        self.playing_player = 0
 
     def current_player(self):
         """
@@ -45,27 +42,12 @@ class OptimalStoppingGameState(pyspiel.State):
 
         :return: the player that will move next
         """
-        
-
         if self.game_over:
             return pyspiel.PlayerId.TERMINAL
-        elif self.is_chance == True: #Chance goes after attacker when one round is finished
+        elif self.is_chance:
             return pyspiel.PlayerId.CHANCE
         else:
-            #Player plays
-            return self.playing_player
-        """
-        #Defender starts
-        if self.playing_player == 3:
-            return 0
-        
-        elif self.playing_player == 0:
-            return 1 #Attacker goes after defender
-        elif self.playing_player == 1:
-            return pyspiel.PlayerId.CHANCE #Chance goes after attacker
-        else:
-            raise NotImplementedError #should not go here
-        """
+            return pyspiel.PlayerId.SIMULTANEOUS
 
     def _legal_actions(self, player):
         """
@@ -83,7 +65,7 @@ class OptimalStoppingGameState(pyspiel.State):
 
         :return: the possible chance outcomes and their probabilities
         """
-        #assert self.is_chance
+        assert self.is_chance
         if self.game_over:
             s = 2
         else:
@@ -92,88 +74,71 @@ class OptimalStoppingGameState(pyspiel.State):
 
     def _apply_action(self, obs: int) -> None:
         """
-        Applies the specified action to the state. (Method to conform to PySpiel's API)
+        Applies a chance node observation to the state (Method to conform to PySpiel's API)
 
         :param obs: the observation
         :return: None
         """
         #print(str(self.config.use_beliefs) + " we are using beliefs?")
+        assert self.is_chance and not self.game_over
+        self.current_iteration += 1
+        self.is_chance = False
+        # self.game_over = (self.game_over or (OptimalStoppingGameUtil.get_observation_type(obs=obs, config=self.config)
+        #                    == OptimalStoppingGameObservationType.TERMINAL))
+        if self.current_iteration >= self.get_game().max_game_length():
+            self.game_over = True
+        self.latest_obs = obs
+        if self.config.use_beliefs and not self.game_over:
+            # TODO Fix this
+            #self.update_pi_2()
 
-        #If chance player plays:
-        if self.is_chance:
-            assert self.is_chance and not self.game_over
-            self.current_iteration += 1
-            self.is_chance = False
-            # self.game_over = (self.game_over or (OptimalStoppingGameUtil.get_observation_type(obs=obs, config=self.config)
-            #                    == OptimalStoppingGameObservationType.TERMINAL))
-            if self.current_iteration >= self.get_game().max_game_length():
-                self.game_over = True
+            pi_2 = self.pi_2
+            self.b1 = OptimalStoppingGameUtil.next_belief(o=obs, a1=self.latest_actions[0], pi_2=pi_2, b=self.b1,
+                                                        config=self.config, l=self.l)
 
-            if self.config.use_beliefs:
-                # TODO Fix this
-                #self.update_pi_2()
+        # Decrement stops left. This has to be done after belief update.
+        if self.latest_actions[0] == 1:
+            self.l -= 1
+        
+        
 
-                pi_2 = self.pi_2
-                self.b1 = OptimalStoppingGameUtil.next_belief(o=obs, a1=self.latest_defender_action, pi_2=pi_2, b=self.b1,
-                                                            config=self.config, l=self.l)
+    def _apply_actions(self, actions : List[int]) -> None:
+        """
+        Apply defender and attacker actions at a simultaneous-move node in the game (Method to conform to PySpiel's API)
 
-            # Decrement stops left. This has to be done after belief update.
-            if self.latest_defender_action == 1:
-                self.l -= 1
+        :param actions: the list of actions to apply
+        :return: None
+        """
+        assert not self.is_chance and not self.game_over
+        self.latest_actions = actions
 
+        # Compute reward
+        r = OptimalStoppingGameUtil.reward_function(state=self.intrusion, defender_action=actions[0],
+                                                    attacker_action=actions[1], l=self.l, config=self.config)
+        self._rewards[0] = r
+        self._rewards[1] = -r
+        self._returns += self._rewards
 
-        else: #Else not chance node
-            
+        # Compute next state
+        s_prime = OptimalStoppingGameUtil.next_state(state=self.intrusion, defender_action=actions[0],
+                                                     attacker_action=actions[1], l=self.l)
+        if s_prime == 2:
+            self.game_over = True
+        else:
+            self.intrusion = s_prime
 
+        self.current_iteration += 1
+        # Check if game has ended
+        if self.current_iteration >= self.get_game().max_game_length():
+            self.game_over = True
 
-            assert not self.is_chance and not self.game_over
-            if self.playing_player == 0: #defender playing
-            
-                self.latest_defender_action = obs
+        # Sample random detection
+        if random.random() <= self.config.p:
+            self.game_over = True
 
-
-            if self.playing_player == 1: #Attacker playing
-                self.latest_attacker_action = obs
-                # Compute reward after both players played
-
-                #print("deff last action:" + str(self.latest_defender_action))
-                #print("att last action:" + str(self.latest_attacker_action))
-                #print("old state " + str(self.intrusion))
-                
-                r = OptimalStoppingGameUtil.reward_function(state=self.intrusion, defender_action=self.latest_defender_action,
-                                                            attacker_action=self.latest_attacker_action, l=self.l, config=self.config)
-                self._rewards[0] = r
-                self._rewards[1] = -r
-                self._returns += self._rewards
-
-                
-                #print("calculated rewards" + str(self._rewards))
-                # Compute next state
-                s_prime = OptimalStoppingGameUtil.next_state(state=self.intrusion, defender_action=self.latest_defender_action,
-                                                            attacker_action=self.latest_attacker_action, l=self.l)
-                
-                #print("new state " + str(s_prime))
-                if s_prime == 2:
-                    self.game_over = True
-                else:
-                    self.intrusion = s_prime
-
-                self.current_iteration += 1
-                # Check if game has ended
-                if self.current_iteration >= self.get_game().max_game_length():
-                    self.game_over = True
-
-                # Sample random detection
-                if random.random() <= self.config.p:
-                    self.game_over = True
-
-                # If game did not end, next node will be a chance node
-                if not self.game_over:
-                    self.is_chance = True
-            self.playing_player = 1 - self.playing_player
-    
-    def update_pi_2(self, new_pi_2):
-        self.pi_2 = new_pi_2
+        # If game did not end, next node will be a chance node
+        if not self.game_over:
+            self.is_chance = True
 
     def _action_to_string(self, player: pyspiel.PlayerId, action: int) -> str:
         """

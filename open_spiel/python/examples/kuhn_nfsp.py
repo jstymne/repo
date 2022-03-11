@@ -114,9 +114,12 @@ def main(unused_argv):
       while not time_step.last():
         player_id = time_step.observations["current_player"]
         agent_output = agents[player_id].step(time_step)
+        print("id" + str(player_id))
+        print("output" + str(agent_output))
         action_list = [agent_output.action]
         time_step = env.step(action_list)
-
+        print(time_step)
+      print("episode over")
       # Episode is over, step all agents with final info state.
       for agent in agents:
         agent.step(time_step)

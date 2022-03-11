@@ -1,22 +1,22 @@
 import pyspiel
-from open_spiel.python.games.optimal_stopping_game_config import OptimalStoppingGameConfig
-from open_spiel.python.games.optimal_stopping_game_state import OptimalStoppingGameState
+from open_spiel.python.games.optimal_stopping_game_config_sequential import OptimalStoppingGameConfigSequential
+from open_spiel.python.games.optimal_stopping_game_state_sequential import OptimalStoppingGameStateSequential
 from open_spiel.python.games.optimal_stopping_game_observer import OptimalStoppingGameObserver
 
 
-class OptimalStoppingGame(pyspiel.Game):
+class OptimalStoppingGameSequential(pyspiel.Game):
     """
     Optimal stopping game to model an intrusion prevention scenario.
     More information can be found here: https://arxiv.org/abs/2111.00289
     """
 
-    def __init__(self, params : dict = OptimalStoppingGameConfig.default_params()):
+    def __init__(self, params : dict = OptimalStoppingGameConfigSequential.default_params()):
         """
         Initializes the game
 
         :param params: user-supplied parameters of the game
         """
-        config = OptimalStoppingGameConfig.from_params_dict(params_dict=params)
+        config = OptimalStoppingGameConfigSequential.from_params_dict(params_dict=params)
         super().__init__(config.create_game_type(),config.create_game_info(), params)
         self.config = config
         self.params = params
@@ -57,7 +57,7 @@ class OptimalStoppingGame(pyspiel.Game):
         """
         :return: the initial state of the game (root node in the extensive-form tree)
         """
-        return OptimalStoppingGameState(self, config=self.config)
+        return OptimalStoppingGameStateSequential(self, config=self.config)
 
     def make_py_observer(self, iig_obs_type=None, params=None) -> OptimalStoppingGameObserver:
         """
@@ -70,10 +70,8 @@ class OptimalStoppingGame(pyspiel.Game):
         return OptimalStoppingGameObserver(
             iig_obs_type or pyspiel.IIGObservationType(perfect_recall=False),
             params)
-    def set_pi2(self,test):
-        print(test)
-
+   
 # Register the game with the OpenSpiel library
 pyspiel.register_game(
-    OptimalStoppingGameConfig.from_params_dict(params_dict=OptimalStoppingGameConfig.default_params()).create_game_type(),
-    OptimalStoppingGame)
+    OptimalStoppingGameConfigSequential.from_params_dict(params_dict=OptimalStoppingGameConfigSequential.default_params()).create_game_type(),
+    OptimalStoppingGameSequential)

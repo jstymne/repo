@@ -119,6 +119,7 @@ def main(unused_argv):
             s = env.get_state
             action_list = [action_output.action]
             time_step = env.step(action_list)
+            print(time_step)
 
         # Episode is over, step all agents with final info state.
         for agent in agents:

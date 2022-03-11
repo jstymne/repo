@@ -245,6 +245,7 @@ class Environment(object):
     self._should_reset = step_type == StepType.LAST
 
     cur_rewards = self._state.rewards()
+    
     for player_id in range(self.num_players):
       rewards.append(cur_rewards[player_id])
       observations["info_state"].append(
@@ -320,6 +321,8 @@ class Environment(object):
     else:
       self._state.apply_actions(actions)
     self._sample_external_events()
+
+    
 
     return self.get_time_step()
 

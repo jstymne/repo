@@ -199,6 +199,13 @@ class NFSP(rl_agent.AbstractAgent):
         self._prev_action = agent_output.action
 
     return agent_output
+    
+  def prep_next_episode_MC(self, time_step):
+      if time_step.last():
+        self._sample_episode_policy()
+        self._prev_timestep = None
+        self._prev_action = None
+        return
 
   def _add_transition(self, time_step, agent_output):
     """Adds the new transition using `time_step` to the reservoir buffer.
