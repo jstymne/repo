@@ -109,10 +109,7 @@ class OptimalStoppingGameState(pyspiel.State):
             if self.current_iteration >= self.get_game().max_game_length():
                 self.game_over = True
 
-            if self.config.use_beliefs:
-                # TODO Fix this
-                #self.update_pi_2()
-
+            if self.config.use_beliefs and not self.game_over:
                 pi_2 = self.pi_2
                 self.b1 = OptimalStoppingGameUtil.next_belief(o=obs, a1=self.latest_defender_action, pi_2=pi_2, b=self.b1,
                                                             config=self.config, l=self.l)
@@ -124,8 +121,6 @@ class OptimalStoppingGameState(pyspiel.State):
 
         else: #Else not chance node
             
-
-
             assert not self.is_chance and not self.game_over
             if self.playing_player == 0: #defender playing
             
@@ -135,24 +130,17 @@ class OptimalStoppingGameState(pyspiel.State):
             if self.playing_player == 1: #Attacker playing
                 self.latest_attacker_action = obs
                 # Compute reward after both players played
-
-                #print("deff last action:" + str(self.latest_defender_action))
-                #print("att last action:" + str(self.latest_attacker_action))
-                #print("old state " + str(self.intrusion))
-                
+               
                 r = OptimalStoppingGameUtil.reward_function(state=self.intrusion, defender_action=self.latest_defender_action,
                                                             attacker_action=self.latest_attacker_action, l=self.l, config=self.config)
                 self._rewards[0] = r
                 self._rewards[1] = -r
                 self._returns += self._rewards
 
-                
-                #print("calculated rewards" + str(self._rewards))
                 # Compute next state
                 s_prime = OptimalStoppingGameUtil.next_state(state=self.intrusion, defender_action=self.latest_defender_action,
                                                             attacker_action=self.latest_attacker_action, l=self.l)
                 
-                #print("new state " + str(s_prime))
                 if s_prime == 2:
                     self.game_over = True
                 else:
