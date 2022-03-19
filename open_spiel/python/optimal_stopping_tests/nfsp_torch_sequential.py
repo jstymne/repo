@@ -95,8 +95,12 @@ def main(unused_argv):
     info_state_size = env.observation_spec()["info_state"][0]
     num_actions = env.action_spec()["num_actions"]
 
-    network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [64, 64, 64], 'memory_rl': 600000,
+    # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [64, 64, 64], 'memory_rl': 600000,
+    #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
+
+    network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [32, 32, 32], 'memory_rl': 600000,
                           'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
+    learn_every=64
 
     # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [32, 32, 32], 'memory_rl': 60000,
     #                       'memory_sl': 1000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.009}
@@ -119,7 +123,7 @@ def main(unused_argv):
     kwargs = {
         "replay_buffer_capacity": memory_rl,
         "epsilon_decay_duration": num_train_episodes,
-        "epsilon_start": 0.15,
+        "epsilon_start": 0.06,
         "epsilon_end": 0.001,
     }
 
