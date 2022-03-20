@@ -237,6 +237,134 @@ class OptimalStoppingGameUtil:
                 p[state] = attacker_agent.step(temp_timestep, is_evaluation=True).probs.tolist()
         return p
         #raise NotImplementedError
+    
+    @staticmethod
+    def get_pi_1(defender_agent, current_belief, current_l, temp_mode = None, is_temp_mode = False):
+        p = [
+                [0.5,0.5],
+                [0.5,0.5],
+                [0.5,0.5]
+            ]
+        for state in [0,1]:
+            temp_observations = {
+                'info_state': [[current_l, current_belief, current_belief], 
+                [current_l, current_belief, state]], 
+                'legal_actions': [[0, 1],[]],
+                'current_player': 0,
+                "serialized_state": []
+                }
+
+            temp_timestep= rl_environment.TimeStep(
+                observations= temp_observations, rewards=None, discounts=None, step_type=None)
+            if is_temp_mode:
+                with defender_agent.temp_mode_as(temp_mode):
+                    p[state] = defender_agent.step(temp_timestep, is_evaluation=True).probs.tolist()
+            else:
+                p[state] = defender_agent.step(temp_timestep, is_evaluation=True).probs.tolist()
+        return p
+        #raise NotImplementedError
+    
+    @staticmethod
+    def game_value_MC(agents, env):
+        print("Calculating game value")
+        mc_episodes = 1000
+        
+        #print(time_step)
+        #Calculation of v
+        
+        v = [0,0]
+        v_vec = []
+        for ep in range(mc_episodes):
+            time_step = env.reset()
+            while not time_step.last():
+                player_id = time_step.observations["current_player"]
+                time_step.observations["info_state"] = OptimalStoppingGameUtil.round_vec(time_step.observations["info_state"])
+                
+                action_output = agents[player_id].step(time_step, is_evaluation = True)
+                
+                s = env.get_state
+                action = [action_output.action]
+                time_step = env.step(action)
+                #print(time_step)
+                #Update pi2
+                time_step.observations["info_state"] = OptimalStoppingGameUtil.round_vec(time_step.observations["info_state"])
+                current_l = time_step.observations["info_state"][0][0]
+                current_belief = time_step.observations["info_state"][0][1]
+                new_pi_2 = OptimalStoppingGameUtil.update_pi_2(agents[1],current_belief,current_l)
+                s.update_pi_2(new_pi_2)
+
+            # Episode is over, step all agents with final info state.
+            agents[0].prep_next_episode_MC(time_step)
+            agents[1].prep_next_episode_MC(time_step)
+
+            #Episode over
+            v = v + s.returns()
+            v_vec.append(v[0] / (ep+1))
+        #print(v_1)
+       
+        v = v / mc_episodes
+       
+        print("Current game value is " + str(v[0]))
+
+        #print(v_vec)
+        #plt.plot(v_vec)
+        #plt.ylabel('some numbers')
+        #plt.show()
+        #plt.savefig('foo.png')
+        
+        
+        return v[0]
+        #return v_1 - v_2
+        
+    
+    @staticmethod
+    def random_agent_play(agents, env):
+        print("Calculating game value")
+        mc_episodes = 1000
+        
+        #print(time_step)
+        #Calculation of v
+        
+        v = [0,0]
+        v_vec = []
+        for ep in range(mc_episodes):
+            time_step = env.reset()
+            while not time_step.last():
+                player_id = time_step.observations["current_player"]
+                time_step.observations["info_state"] = OptimalStoppingGameUtil.round_vec(time_step.observations["info_state"])
+                
+                action_output = agents[player_id].step(time_step, is_evaluation = True)
+                
+                s = env.get_state
+                action = [action_output.action]
+                time_step = env.step(action)
+                #print(time_step)
+                #Update pi2
+                time_step.observations["info_state"] = OptimalStoppingGameUtil.round_vec(time_step.observations["info_state"])
+                current_l = time_step.observations["info_state"][0][0]
+                current_belief = time_step.observations["info_state"][0][1]
+                new_pi_2 = OptimalStoppingGameUtil.update_pi_2(agents[1],current_belief,current_l)
+                s.update_pi_2(new_pi_2)
+
+            # Episode is over, step all agents with final info state.
+            agents[0].prep_next_episode_MC(time_step)
+            agents[1].prep_next_episode_MC(time_step)
+
+            #Episode over
+            v = v + s.returns()
+            v_vec.append(v[0] / (ep+1))
+        #print(v_1)
+       
+        v = v / mc_episodes
+       
+        print("Current game value is " + str(v[0]))
+
+
+    @staticmethod
+    def random_agent_act(prob_parameter = 0.3):
+        state0_stop_probability = 1-np.random.random(0,prob_parameter)
+        state1_stop_probability = 1-np.random.random(0,prob_parameter)
+
 
     @staticmethod
     def approx_exploitability(agents, env):

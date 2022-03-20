@@ -212,6 +212,14 @@ class OptimalStoppingGameConfig:
         d["obs"] = " ".join(list(map(lambda x: str(x),[0,1,2,3,4,5,6,7,8,9,10])))
         d["obs_dist"] = " ".join(list(map(lambda x: str(x),[4/20,4/20,4/20,2/20,1/20,1/20,1/20,1/20,1/20,1/20,0])))
         d["obs_dist_intrusion"] = " ".join(list(map(lambda x: str(x),[1/20,1/20,1/20,1/20,1/20,1/20,2/20,4/20,4/20,4/20,0])))
+
+        #Uniform dist
+        #d["obs_dist"] = " ".join(list(map(lambda x: str(x),[2/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,0])))
+        #d["obs_dist_intrusion"] = " ".join(list(map(lambda x: str(x),[2/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,0])))
+        
+        #d["obs_dist"] = " ".join(list(map(lambda x: str(x),[3/20,3/20,3/20,3/20,2/20,2/20,1/20,1/20,1/20,1/20,0])))
+        #d["obs_dist_intrusion"] = " ".join(list(map(lambda x: str(x),[1/20,1/20,1/20,1/20,2/20,2/20,3/20,3/20,3/20,3/20,0])))
+
         d["initial_belief"] = " ".join(list(map(lambda x: str(x),[1,0,0])))
         d["use_beliefs"] = False
         return d
