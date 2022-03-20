@@ -30,4 +30,9 @@ from open_spiel.python.games import dynamic_routing
 from open_spiel.python.games import iterated_prisoners_dilemma
 from open_spiel.python.games import kuhn_poker
 from open_spiel.python.games import tic_tac_toe
+<<<<<<< HEAD
 from open_spiel.python.games import optimal_stopping_game
+=======
+from open_spiel.python.games import optimal_stopping_game
+from open_spiel.python.games import optimal_stopping_game_sequential
+>>>>>>> 57a1e3e902ec97c0e120c955af9d0ce2badd3c98
