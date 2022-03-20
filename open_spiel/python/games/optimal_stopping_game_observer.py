@@ -27,7 +27,7 @@ class OptimalStoppingGameObserver:
                 intrusion_state = rounded_belief_1
 
         l = state.l
-        self.dict = {"observation": np.array([t, l, rounded_belief_1, intrusion_state])}
+        self.dict = {"observation": np.array([l, rounded_belief_1, intrusion_state])}
 
     def string_from(self, state, player):
         """Observation of `state` from the PoV of `player`, as a string."""

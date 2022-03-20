@@ -54,8 +54,8 @@ def get_stopping_probabilities(agents, l: int = 3):
     attacker_stopping_probabilities_intrusion = []
     defender_stopping_probabilities = []
     for b in belief_space:
-        info_state_intrusion = [[1, l, b, b], [1, l, b, 1]]
-        info_state_no_intrusion = [[1, l, b, b], [1, l, b, 0]]
+        info_state_intrusion = [[l, b, b], [l, b, 1]]
+        info_state_no_intrusion = [[l, b, b], [l, b, 0]]
 
         defender_stopping_probabilities.append(agents[0]._act(info_state_intrusion[0], legal_actions = [0, 1])[1][1])
         attacker_stopping_probabilities_intrusion.append(agents[1]._act(info_state_intrusion[1], legal_actions = [0, 1])[1][1])
@@ -110,10 +110,11 @@ def main(unused_argv):
     params["T_max"] = 5
 
 
-    params["R_SLA"] = 0
+    params["R_SLA"] = 1
     params["R_ST"] = 10
-    params["R_COST"] = -1
+    params["R_COST"] = -5
     params["R_INT"] = -10
+    params["L"] = 1
 
     game = pyspiel.load_game("python_optimal_stopping_game_sequential", params)
     num_players = game.config.num_players
@@ -129,8 +130,16 @@ def main(unused_argv):
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
     # learn_every=64
 
-    network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
-                          'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
+    # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
+    #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
+    # learn_every=64
+
+    # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
+    #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.1, 'sl_learning_rate': 0.005}
+    # learn_every=64
+
+    network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [256,256,256], 'memory_rl': 600000,
+                          'memory_sl': 10000000.0, 'rl_learning_rate': 0.1, 'sl_learning_rate': 0.005}
     learn_every=64
 
     # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
@@ -138,8 +147,8 @@ def main(unused_argv):
     # learn_every=64
 
     # device_str="cuda:1"
-    device_str="cpu"
-    # device_str="cuda:0"
+    # device_str="cpu"
+    device_str="cuda:0"
 
     seed = 999
     random.seed(seed)

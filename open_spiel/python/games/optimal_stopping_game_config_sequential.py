@@ -7,11 +7,6 @@ from open_spiel.python.games.optimal_stopping_game_state_type import OptimalStop
 
 class OptimalStoppingGameConfigSequential:
 
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> 57a1e3e902ec97c0e120c955af9d0ce2badd3c98
     def __init__(self, p: float = 0.001, T_max: int = 5, L: int = 3, R_ST: int = 100, R_SLA: int = 10,
                  R_COST: int = -50, R_INT: int = -100, obs: str = "",
                  obs_dist: str = "", obs_dist_intrusion: str = "", initial_belief: str = "", use_beliefs: bool = False):
@@ -62,17 +57,15 @@ class OptimalStoppingGameConfigSequential:
         self.obs_dist_terminal[-1] = 1
         self.initial_belief = initial_belief
         self.num_players = 2
-<<<<<<< HEAD
+
         self.observation_tensor_size = 3
         self.observation_tensor_shape = (3,)
         self.information_state_tensor_size = 3
         self.information_state_tensor_shape = (3,)
-=======
         self.observation_tensor_size = 4
         self.observation_tensor_shape = (4,)
         self.information_state_tensor_size = 4
         self.information_state_tensor_shape = (4,)
->>>>>>> 57a1e3e902ec97c0e120c955af9d0ce2badd3c98
         self.params = self.params_dict()
         self.A1 = list(map(lambda x: x.value, self.get_actions()))
         self.A2 = list(map(lambda x: x.value, self.get_actions()))
@@ -81,11 +74,6 @@ class OptimalStoppingGameConfigSequential:
         self.Z = self.observation_tensor()
         self.T = []
         self.R = []
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> 57a1e3e902ec97c0e120c955af9d0ce2badd3c98
         for l in range(0, self.L):
             self.T.append(self.transition_tensor(l=l+1).tolist())
             self.R.append(self.reward_tensor(l=l+1).tolist())
@@ -192,11 +180,6 @@ class OptimalStoppingGameConfigSequential:
                f"R_COST:{self.R_COST}, R_INT:{self.R_INT}, observations:{self.obs}, " \
                f"obs_dist:{self.obs_dist}, obs_dist_intrusion:{self.obs_dist_intrusion}, " \
                f"actions:{self.get_actions()}, initial_belief:{self.initial_belief}, use_beliefs:{self.use_beliefs}"
-<<<<<<< HEAD
-               
-=======
-
->>>>>>> 57a1e3e902ec97c0e120c955af9d0ce2badd3c98
 
     @staticmethod
     def from_params_dict(params_dict: dict) -> "OptimalStoppingGameConfigSequential":
@@ -353,8 +336,4 @@ class OptimalStoppingGameConfigSequential:
                         ]
                     ]
                 ]
-<<<<<<< HEAD
             )
-=======
-            )
->>>>>>> 57a1e3e902ec97c0e120c955af9d0ce2badd3c98

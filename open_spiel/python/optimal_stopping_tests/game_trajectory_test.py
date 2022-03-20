@@ -8,7 +8,7 @@ params = OptimalStoppingGameConfig.default_params()
 params["use_beliefs"] = True
 params["T_max"] = 6
 game = pyspiel.load_game("python_optimal_stopping_game", params)
-game = pyspiel.convert_to_turn_based(game)
+# game = pyspiel.convert_to_turn_based(game)
 state = game.new_initial_state()
 while not state.is_terminal():
     legal_actions = state.legal_actions()
