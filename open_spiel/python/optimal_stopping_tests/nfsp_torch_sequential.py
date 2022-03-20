@@ -55,7 +55,7 @@ def get_stopping_probabilities(agents, l: int = 3):
     defender_stopping_probabilities = []
     for b in belief_space:
         info_state_intrusion = [[1, l, b, b], [1, l, b, 1]]
-        info_state_no_intrusion = [[1, l, b, b], [1, l, b, 1]]
+        info_state_no_intrusion = [[1, l, b, b], [1, l, b, 0]]
 
         defender_stopping_probabilities.append(agents[0]._act(info_state_intrusion[0], legal_actions = [0, 1])[1][1])
         attacker_stopping_probabilities_intrusion.append(agents[1]._act(info_state_intrusion[1], legal_actions = [0, 1])[1][1])
