@@ -38,13 +38,11 @@ ILLEGAL_ACTION_LOGITS_PENALTY = -1e9
 
 class SonnetLinear(nn.Module):
   """A Sonnet linear module.
-
   Always includes biases and only supports ReLU activations.
   """
 
   def __init__(self, in_size, out_size, activate_relu=True):
     """Creates a Sonnet linear layer.
-
     Args:
       in_size: (int) number of inputs
       out_size: (int) number of outputs
@@ -81,7 +79,6 @@ class MLP(nn.Module):
                output_size,
                activate_final=False):
     """Create the MLP.
-
     Args:
       input_size: (int) number of inputs
       hidden_sizes: (list) sizes (number of units) of each hidden layer
@@ -112,7 +109,6 @@ class MLP(nn.Module):
 
 class DQN(rl_agent.AbstractAgent):
   """DQN Agent implementation in PyTorch.
-
   See open_spiel/python/examples/breakthrough_dqn.py for an usage example.
   """
 
@@ -196,12 +192,10 @@ class DQN(rl_agent.AbstractAgent):
 
   def step(self, time_step, is_evaluation=False, add_transition_record=True):
     """Returns the action to be taken and updates the Q-network if needed.
-
     Args:
       time_step: an instance of rl_environment.TimeStep.
       is_evaluation: bool, whether this is a training or evaluation call.
       add_transition_record: Whether to add to the replay buffer on this step.
-
     Returns:
       A `rl_agent.StepOutput` containing the action probs and chosen action.
     """
@@ -246,10 +240,8 @@ class DQN(rl_agent.AbstractAgent):
 
   def add_transition(self, prev_time_step, prev_action, time_step):
     """Adds the new transition using `time_step` to the replay buffer.
-
     Adds the transition from `self._prev_timestep` to `time_step` by
     `self._prev_action`.
-
     Args:
       prev_time_step: prev ts, an instance of rl_environment.TimeStep.
       prev_action: int, action taken at `prev_time_step`.
@@ -271,14 +263,11 @@ class DQN(rl_agent.AbstractAgent):
 
   def _epsilon_greedy(self, info_state, legal_actions, epsilon):
     """Returns a valid epsilon-greedy action and valid action probs.
-
     Action probabilities are given by a softmax over legal q-values.
-
     Args:
       info_state: hashable representation of the information state.
       legal_actions: list of legal actions at `info_state`.
       epsilon: float, probability of taking an exploratory action.
-
     Returns:
       A valid epsilon-greedy action and valid action probabilities.
     """
@@ -306,10 +295,8 @@ class DQN(rl_agent.AbstractAgent):
 
   def learn(self):
     """Compute the loss on sampled transitions and perform a Q-network update.
-
     If there are not enough elements in the buffer, no loss is computed and
     `None` is returned instead.
-
     Returns:
       The average loss obtained on this batch of transitions or `None`.
     """
@@ -380,14 +367,12 @@ class DQN(rl_agent.AbstractAgent):
 
   def copy_with_noise(self, sigma=0.0, copy_weights=True):
     """Copies the object and perturbates it with noise.
-
     Args:
       sigma: gaussian dropout variance term : Multiplicative noise following
         (1+sigma*epsilon), epsilon standard gaussian variable, multiplies each
         model weight. sigma=0 means no perturbation.
       copy_weights: Boolean determining whether to copy model weights (True) or
         just model hyperparameters.
-
     Returns:
       Perturbated copy of the model.
     """

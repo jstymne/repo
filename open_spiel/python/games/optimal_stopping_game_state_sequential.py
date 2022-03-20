@@ -13,7 +13,6 @@ class OptimalStoppingGameStateSequential(pyspiel.State):
     def __init__(self, game, config: OptimalStoppingGameConfigSequential):
         """
         Initializes the game state
-
         :param game: the optimal stopping game
         :param config: the game config
         """
@@ -31,6 +30,7 @@ class OptimalStoppingGameStateSequential(pyspiel.State):
         self.latest_defender_action = 0
         self.latest_obs = 0
         self.b1 = config.initial_belief
+        print("hej")
 
         self.pi_2 = [
             [0.5,0.5],
@@ -42,7 +42,6 @@ class OptimalStoppingGameStateSequential(pyspiel.State):
     def current_player(self):
         """
         Method to conform to PySpiel's API
-
         :return: the player that will move next
         """
         if self.game_over:
@@ -54,7 +53,6 @@ class OptimalStoppingGameStateSequential(pyspiel.State):
     def _legal_actions(self, player):
         """
         Method to conform to PySpiel's API
-
         :param player: the player to get the legal actions of
         :return: a list of legal actions, sorted in ascending order.
         """
@@ -64,7 +62,6 @@ class OptimalStoppingGameStateSequential(pyspiel.State):
     def chance_outcomes(self) -> List[Tuple[int, float]]:
         """
         Method to follow pyspiel's API
-
         :return: the possible chance outcomes and their probabilities
         """
         if self.game_over:
@@ -76,7 +73,6 @@ class OptimalStoppingGameStateSequential(pyspiel.State):
     def _apply_action(self, action: int) -> None:
         """
         Applies the specified action to the state. (Method to conform to PySpiel's API)
-
         :param action: the action
         :return: None
         """
@@ -160,7 +156,6 @@ class OptimalStoppingGameStateSequential(pyspiel.State):
     def _action_to_string(self, player: pyspiel.PlayerId, action: int) -> str:
         """
         Method to conform to PySpiel's API
-
         :param player: the player that took the action
         :param action: the action
         :return: a string representation of an action
@@ -173,7 +168,6 @@ class OptimalStoppingGameStateSequential(pyspiel.State):
     def is_terminal(self) -> bool:
         """
         Method to conform to PySpiel's API
-
         :return: True if the game has ended
         """
         return self.game_over
@@ -181,22 +175,21 @@ class OptimalStoppingGameStateSequential(pyspiel.State):
     def rewards(self) -> np.ndarray:
         """
         Method to conform to PySpiel's API
-
         :return: rewards at the previous step
         """
         return self._rewards
+
     def returns(self) -> np.ndarray:
         """
         Method to conform to PySpiel's API
-
         :return: Total reward for each player over the course of the game so far.
         """
         return self._returns
 
+
     def __str__(self):
         """
         Method to conform to PySpiel's API
-
         :return: String for debug purposes. No particular semantics are required.
         """
         return (f"p0_history:{self.action_history_string(0)}, "
@@ -205,7 +198,6 @@ class OptimalStoppingGameStateSequential(pyspiel.State):
     def action_history_string(self, player):
         """
         Method to conform to PySpiel's API
-
         :param player: the player to get the history of
         :return: String representation of the history of actions of a given player
         """

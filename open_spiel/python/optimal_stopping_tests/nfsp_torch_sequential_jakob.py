@@ -114,7 +114,7 @@ def main(unused_argv):
     params["R_ST"] = 10
     params["R_COST"] = -5
     params["R_INT"] = -20
-    params["L"] = 1
+    #params["L"] = 3
     params["obs_dist"] = " ".join(list(map(lambda x: str(x),[4/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,1/20,1/20,0])))
     params["obs_dist_intrusion"] = " ".join(list(map(lambda x: str(x),[1/20,1/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,4/20,0])))
 
@@ -140,13 +140,22 @@ def main(unused_argv):
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
     # learn_every=64
 
-    network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [512,512,512,512], 'memory_rl': 600000,
-                          'memory_sl': 10000000.0, 'rl_learning_rate': 0.1, 'sl_learning_rate': 0.005}
-    learn_every=64
+    #network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [512,512,512,512], 'memory_rl': 600000,
+                         # 'memory_sl': 10000000.0, 'rl_learning_rate': 0.1, 'sl_learning_rate': 0.005}
+    #learn_every=64
+
+    network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [64, 64, 64], 'memory_rl': 600000, 'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
+    hidden_layers_sizes = network_parameters['hidden_layers_sizes']
+    batch_size = network_parameters['batch_size']
+    rl_learning_rate = network_parameters['rl_learning_rate']
+    sl_learning_rate = network_parameters['sl_learning_rate']
+    memory_rl = network_parameters['memory_rl']
+    memory_sl = network_parameters['memory_sl']
+    
 
     # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [256,256,256], 'memory_rl': 600000,
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.1, 'sl_learning_rate': 0.005}
-    # learn_every=64
+    learn_every=64
 
     # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.007, 'sl_learning_rate': 0.001}
@@ -164,12 +173,12 @@ def main(unused_argv):
     # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [32, 32, 32], 'memory_rl': 60000,
     #                       'memory_sl': 1000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.009}
 
-    hidden_layers_sizes = network_parameters['hidden_layers_sizes']
-    batch_size = network_parameters['batch_size']
-    rl_learning_rate = network_parameters['rl_learning_rate']
-    sl_learning_rate = network_parameters['sl_learning_rate']
-    memory_rl = network_parameters['memory_rl']
-    memory_sl = network_parameters['memory_sl']
+    #hidden_layers_sizes = network_parameters['hidden_layers_sizes']
+    #batch_size = network_parameters['batch_size']
+    #rl_learning_rate = network_parameters['rl_learning_rate']
+    #sl_learning_rate = network_parameters['sl_learning_rate']
+    #memory_rl = network_parameters['memory_rl']
+    #memory_sl = network_parameters['memory_sl']
 
     expl_array  = []
     approx_expl_array = []
@@ -178,7 +187,7 @@ def main(unused_argv):
     eval_every = 10000
     #hidden_layers_sizes = [64, 64, 64]
     num_train_episodes = int(3e6)
-    num_train_episodes = int(1000000000)
+    num_train_episodes = int(10000)
     kwargs = {
         "replay_buffer_capacity": memory_rl,
         "epsilon_decay_duration": num_train_episodes,
