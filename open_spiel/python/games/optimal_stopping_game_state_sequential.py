@@ -94,7 +94,7 @@ class OptimalStoppingGameStateSequential(pyspiel.State):
         if self.playing_player == OptimalStoppingGamePlayerType.ATTACKER:
             self.latest_attacker_action = action
             # Compute reward after both players played
-            r = OptimalStoppingGameUtil.reward_function(state=self.intrusion, defender_action=self.latest_attacker_action,
+            r = OptimalStoppingGameUtil.reward_function(state=self.intrusion, defender_action=self.latest_defender_action,
                                                         attacker_action=self.latest_attacker_action, l=self.l, config=self.config)
             self._rewards[0] = r
             self._rewards[1] = -r

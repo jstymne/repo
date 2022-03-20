@@ -8,6 +8,11 @@ from open_spiel.python.games.optimal_stopping_game_config import OptimalStopping
 params = OptimalStoppingGameConfig.default_params()
 params["use_beliefs"] = True
 params["T_max"] = 6
+params["R_SLA"] = 1
+params["R_ST"] = 10
+params["R_COST"] = -5
+params["R_INT"] = -10
+params["L"] = 1
 game = pyspiel.load_game("python_optimal_stopping_game_sequential", params)
 state = game.new_initial_state()
 while not state.is_terminal():
@@ -26,4 +31,4 @@ while not state.is_terminal():
         # action = legal_actions[0]
 
     state.apply_action(action)
-    print(f"state:{state.history()}, rewards: {state._rewards}")
+    print(f"state:{state.history()}, rewards: {state._rewards}, beliefs:{state.b1}")
