@@ -133,7 +133,9 @@ class DQN(rl_agent.AbstractAgent):
                epsilon_end=0.1,
                epsilon_decay_duration=int(1e6),
                optimizer_str="sgd",
-               loss_str="mse"):
+               loss_str="mse",
+               device_str ="cpu"
+               ):
     """Initialize the DQN agent."""
 
     # This call to locals() is used to store every argument used to initialize
@@ -161,6 +163,7 @@ class DQN(rl_agent.AbstractAgent):
     self._replay_buffer = replay_buffer_class(replay_buffer_capacity)
     self._prev_timestep = None
     self._prev_action = None
+    self.device = torch.device(device_str)
 
     # Step counter to keep track of learning, eps decay and target network.
     self._step_counter = 0
@@ -170,10 +173,10 @@ class DQN(rl_agent.AbstractAgent):
 
     # Create the Q-network instances
     self._q_network = MLP(state_representation_size, self._layer_sizes,
-                          num_actions)
+                          num_actions).to(self.device)
 
     self._target_q_network = MLP(state_representation_size, self._layer_sizes,
-                                 num_actions)
+                                 num_actions).to(self.device)
 
     if loss_str == "mse":
       self.loss_class = F.mse_loss
@@ -284,7 +287,7 @@ class DQN(rl_agent.AbstractAgent):
       action = np.random.choice(legal_actions)
       probs[legal_actions] = 1.0 / len(legal_actions)
     else:
-      info_state = torch.Tensor(np.reshape(info_state, [1, -1]))
+      info_state = torch.Tensor(np.reshape(info_state, [1, -1])).to(self.device)
       q_values = self._q_network(info_state).detach()[0]
       legal_q_values = q_values[legal_actions]
       action = legal_actions[torch.argmax(legal_q_values)]
@@ -316,10 +319,10 @@ class DQN(rl_agent.AbstractAgent):
       return None
 
     transitions = self._replay_buffer.sample(self._batch_size)
-    info_states = torch.Tensor([t.info_state for t in transitions])
+    info_states = torch.Tensor([t.info_state for t in transitions]).to(self.device)
     actions = torch.LongTensor([t.action for t in transitions])
     rewards = torch.Tensor([t.reward for t in transitions])
-    next_info_states = torch.Tensor([t.next_info_state for t in transitions])
+    next_info_states = torch.Tensor([t.next_info_state for t in transitions]).to(self.device)
     are_final_steps = torch.Tensor([t.is_final_step for t in transitions])
     legal_actions_mask = torch.Tensor(
         [t.legal_actions_mask for t in transitions])
@@ -329,9 +332,9 @@ class DQN(rl_agent.AbstractAgent):
 
     illegal_actions = 1 - legal_actions_mask
     illegal_logits = illegal_actions * ILLEGAL_ACTION_LOGITS_PENALTY
-    max_next_q = torch.max(self._target_q_values + illegal_logits, dim=1)[0]
+    max_next_q = torch.max(self._target_q_values.cpu() + illegal_logits, dim=1)[0]
     target = (
-        rewards + (1 - are_final_steps) * self._discount_factor * max_next_q)
+        rewards + (1 - are_final_steps) * self._discount_factor * max_next_q).to(self.device)
     action_indices = torch.stack([
         torch.arange(self._q_values.shape[0], dtype=torch.long), actions
     ],

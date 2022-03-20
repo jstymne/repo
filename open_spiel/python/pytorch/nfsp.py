@@ -63,6 +63,7 @@ class NFSP(rl_agent.AbstractAgent):
                  learn_every=64,
                  stopping_game = False,
                  optimizer_str="sgd",
+                 device_str ="cpu",
                  **kwargs):
         """Initialize the `NFSP` agent."""
         self.player_id = player_id
@@ -77,6 +78,7 @@ class NFSP(rl_agent.AbstractAgent):
         self._prev_timestep = None
         self._prev_action = None
         self.stopping_game = stopping_game
+        self.device = torch.device(device_str)
 
         # Step counter to keep track of learning.
         self._step_counter = 0
@@ -91,7 +93,7 @@ class NFSP(rl_agent.AbstractAgent):
             "optimizer_str": optimizer_str,
         })
         self._rl_agent = dqn.DQN(player_id, state_representation_size,
-                                 num_actions, hidden_layers_sizes, **kwargs)
+                                 num_actions, hidden_layers_sizes, device_str=device_str, **kwargs)
 
         # Keep track of the last training loss achieved in an update step.
         self._last_rl_loss_value = lambda: self._rl_agent.loss
@@ -100,6 +102,7 @@ class NFSP(rl_agent.AbstractAgent):
         # Average policy network.
         self._avg_network = dqn.MLP(state_representation_size,
                                     self._layer_sizes, num_actions)
+        self._avg_network.to(self.device)
 
         self._savers = [
             ("q_network", self._rl_agent._q_network),
@@ -133,13 +136,13 @@ class NFSP(rl_agent.AbstractAgent):
 
     def _act(self, info_state, legal_actions):
         info_state = np.reshape(info_state, [1, -1])
-        action_values = self._avg_network(torch.Tensor(info_state))
+        action_values = self._avg_network(torch.Tensor(info_state).to(self.device))
         action_probs = F.softmax(action_values, dim=1).detach()
 
         self._last_action_values = action_values[0]
         # Remove illegal actions, normalize probs
         probs = np.zeros(self._num_actions)
-        probs[legal_actions] = action_probs[0][legal_actions]
+        probs[legal_actions] = action_probs.cpu()[0][legal_actions]
         probs /= sum(probs)
         action = np.random.choice(len(probs), p=probs)
         return action, probs

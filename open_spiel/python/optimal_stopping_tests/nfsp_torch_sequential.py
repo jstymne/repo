@@ -98,9 +98,11 @@ def main(unused_argv):
     # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [64, 64, 64], 'memory_rl': 600000,
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
 
-    network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [32, 32, 32], 'memory_rl': 600000,
+    network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [512,512,512], 'memory_rl': 600000,
                           'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
     learn_every=64
+    device_str="cuda:1"
+    # device_str="cpu"
 
     # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [32, 32, 32], 'memory_rl': 60000,
     #                       'memory_sl': 1000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.009}
@@ -141,6 +143,7 @@ def main(unused_argv):
                   learn_every = 64,
                   stopping_game = True,
                   optimizer_str="adam",
+                  device_str=device_str,
                   **kwargs) for idx in range(num_players)
     ]
 
@@ -162,6 +165,7 @@ def main(unused_argv):
                 print(e)
                 print("Some exception when calcluation exploitability")
             print(f"Episode:{ep+1}, AVG Exploitability:{expl}, losses: {losses}")
+            sys.stdout.flush()
 
             expl_array.append(expl)
             # approx_expl_array.append(approxexpl[-1])
