@@ -113,8 +113,10 @@ def main(unused_argv):
     params["R_SLA"] = 1
     params["R_ST"] = 10
     params["R_COST"] = -5
-    params["R_INT"] = -10
+    params["R_INT"] = -20
     params["L"] = 1
+    params["obs_dist"] = " ".join(list(map(lambda x: str(x),[4/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,1/20,1/20,0])))
+    params["obs_dist_intrusion"] = " ".join(list(map(lambda x: str(x),[1/20,1/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,4/20,0])))
 
     game = pyspiel.load_game("python_optimal_stopping_game_sequential", params)
     num_players = game.config.num_players
@@ -134,21 +136,25 @@ def main(unused_argv):
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
     # learn_every=64
 
-    # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
-    #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.1, 'sl_learning_rate': 0.005}
+    # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [512,512,512,512], 'memory_rl': 600000,
+    #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
     # learn_every=64
 
-    network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [256,256,256], 'memory_rl': 600000,
+    network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [512,512,512,512], 'memory_rl': 600000,
                           'memory_sl': 10000000.0, 'rl_learning_rate': 0.1, 'sl_learning_rate': 0.005}
     learn_every=64
+
+    # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [256,256,256], 'memory_rl': 600000,
+    #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.1, 'sl_learning_rate': 0.005}
+    # learn_every=64
 
     # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.007, 'sl_learning_rate': 0.001}
     # learn_every=64
 
     # device_str="cuda:1"
-    # device_str="cpu"
-    device_str="cuda:0"
+    device_str="cpu"
+    # device_str="cuda:0"
 
     seed = 999
     random.seed(seed)
