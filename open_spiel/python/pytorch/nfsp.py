@@ -259,8 +259,8 @@ class NFSP(rl_agent.AbstractAgent):
             return None
 
         transitions = self._reservoir_buffer.sample(self._batch_size)
-        info_states = torch.Tensor([t.info_state for t in transitions])
-        action_probs = torch.Tensor([t.action_probs for t in transitions])
+        info_states = torch.Tensor([t.info_state for t in transitions]).to(self.device)
+        action_probs = torch.Tensor([t.action_probs for t in transitions]).to(self.device)
 
         self.optimizer.zero_grad()
         loss = F.cross_entropy(self._avg_network(info_states),
