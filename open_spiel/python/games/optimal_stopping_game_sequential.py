@@ -53,11 +53,7 @@ class OptimalStoppingGameSequential(pyspiel.Game):
         """
         return self.config.information_state_tensor_shape
 
-<<<<<<< HEAD
-    def new_initial_state(self) -> OptimalStoppingGameState:
-=======
     def new_initial_state(self) -> OptimalStoppingGameStateSequential:
->>>>>>> 57a1e3e902ec97c0e120c955af9d0ce2badd3c98
         """
         :return: the initial state of the game (root node in the extensive-form tree)
         """
@@ -74,16 +70,8 @@ class OptimalStoppingGameSequential(pyspiel.Game):
         return OptimalStoppingGameObserver(
             iig_obs_type or pyspiel.IIGObservationType(perfect_recall=False),
             params)
-<<<<<<< HEAD
-   
-# Register the game with the OpenSpiel library
-pyspiel.register_game(
-    OptimalStoppingGameConfigSequential.from_params_dict(params_dict=OptimalStoppingGameConfigSequential.default_params()).create_game_type(),
-    OptimalStoppingGameSequential)
-=======
 
 # Register the game with the OpenSpiel library
 pyspiel.register_game(
     OptimalStoppingGameConfigSequential.from_params_dict(params_dict=OptimalStoppingGameConfigSequential.default_params()).create_game_type(),
     OptimalStoppingGameSequential)
->>>>>>> 57a1e3e902ec97c0e120c955af9d0ce2badd3c98
