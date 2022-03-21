@@ -195,6 +195,8 @@ def main(unused_argv):
         "epsilon_decay_duration": num_train_episodes,
         "epsilon_start": 0.06,
         "epsilon_end": 0.001,
+        "lr_decay_duration": num_train_episodes,
+        "lr_end": rl_learning_rate/10,
     }
 
     agents = [
@@ -212,6 +214,8 @@ def main(unused_argv):
                   stopping_game = True,
                   optimizer_str="adam",
                   device_str=device_str,
+                  sl_lr_decay_duration=num_train_episodes,
+                  sl_lr_end=sl_learning_rate/10,
                   **kwargs) for idx in range(num_players)
     ]
 

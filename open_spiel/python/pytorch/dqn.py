@@ -225,7 +225,7 @@ class DQN(rl_agent.AbstractAgent):
       #Update the learning rate
       for g in self._optimizer.param_groups:
         g['lr'] = self._get_decayed_lr()
-      print("RL lr" + str(self._get_decayed_lr()))
+      #print("RL lr" + str(self._get_decayed_lr()))
 
 
       if self._step_counter % self._learn_every == 0:

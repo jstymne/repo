@@ -144,16 +144,16 @@ attacker_policies = [["attacker_stopping_probabilities_intrusion_3","attacker_st
 defender_policies = ["defender_stopping_probabilities_3", "defender_stopping_probabilities_2", "defender_stopping_probabilities_1"]
 b_vec = np.linspace(0, 1, num=100)
 for policy in attacker_policies:
-    state0_probs = np.zeros((3,100))
-    state1_probs = np.zeros((3,100))
+    state0_probs = np.zeros((2,100))
+    state1_probs = np.zeros((2,100))
     
-    for i in range (1,4):
+    for i in range (1,3):
         df = pd.read_csv("Exploit_new_code"+ str(i) + "_belief.csv")
         
-        prob = df[policy[0]]
-        state0_probs[i-1] = prob
-        prob = df[policy[1]]
-        state1_probs[i-1] = prob
+        stopping_nointrusion_prob = df[policy[1]]
+        state0_probs[i-1] = stopping_nointrusion_prob
+        stopping_intrusion_prob = df[policy[0]]
+        state1_probs[i-1] = stopping_intrusion_prob
     
     state0_averages_attacker = np.average(state0_probs,0)
     state0_errors_attacker = np.std(state0_probs,0)
@@ -161,14 +161,14 @@ for policy in attacker_policies:
     state1_errors_attacker = np.std(state1_probs,0)
     
     axs[0, j].errorbar(b_vec, state0_averages_attacker, state0_errors_attacker, label = "Attacker stopping probability in state 0")
-    axs[0, j].errorbar(b_vec, state1_averages_attacker, state1_errors_attacker, linestyle='None', marker='^', label = "Attacker stopping probability in state 1")
+    axs[0, j].errorbar(b_vec, state1_averages_attacker, state1_errors_attacker, label = "Attacker stopping probability in state 1")
     j = j+1
 j = 0
 for policy in defender_policies:
-    print(policy)
-    state_probs = np.zeros((3,100))
+    #print(policy)
+    state_probs = np.zeros((2,100))
     
-    for i in range (1,4):
+    for i in range (1,3):
         df = pd.read_csv("Exploit_new_code"+ str(i) + "_belief.csv")
         
         prob = df[policy]
@@ -176,7 +176,7 @@ for policy in defender_policies:
     
     state_averages_defender = np.average(state_probs,0)
     state_errors_defender = np.std(state_probs,0)
-    print(state_averages_defender)
+    #print(state_averages_defender)
 
     axs[1, j].errorbar(b_vec, state_averages_defender, state_errors_defender, linestyle='None', marker='^', label = "Defender stopping probability independent of state", color='green')
     j = j+1
@@ -192,7 +192,7 @@ axs[1, 1].set_title('Defender policy for l = 2')
 axs[1, 2].set_title('Defender policy for l = 3')
 
 for ax in axs.flat:
-    ax.set(xlabel='Stopping probability', ylabel='Defender belief')
+    ax.set(ylabel='Stopping probability', xlabel='Defender belief')
 
 #handles, labels = ax.get_legend_handles_labels()
 #fig.legend(handles, labels, loc='upper center')
