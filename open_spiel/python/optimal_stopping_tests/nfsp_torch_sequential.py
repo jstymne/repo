@@ -227,8 +227,9 @@ def main(unused_argv):
             attacker_stopping_probabilities_intrusion, attacker_stopping_probabilities_no_intrusion, \
             defender_stopping_probabilities, belief_space = get_stopping_probabilities(agents, l= l)
 
+            # Smaller values of br_timesteps causes faster calculation at the cost of worse approximation
             approx_exp_obj = OptimalStoppingGameApproxExp(pi_1 = agents[0], pi_2=agents[1], config=game.config,
-                                                          seed=seed)
+                                                          seed=seed, br_timesteps=40000)
             approx_exp = approx_exp_obj.approx_exploitability()
 
 
