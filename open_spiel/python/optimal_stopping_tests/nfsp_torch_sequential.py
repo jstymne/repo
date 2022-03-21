@@ -16,6 +16,7 @@ from open_spiel.python.algorithms import exploitability
 from open_spiel.python.pytorch import nfsp
 from open_spiel.python.games.optimal_stopping_game_config import OptimalStoppingGameConfig
 from open_spiel.python.games.optimal_stopping_game_player_type import OptimalStoppingGamePlayerType
+from open_spiel.python.games.optimal_stopping_game_approx_exp import OptimalStoppingGameApproxExp
 import random
 import torch
 import matplotlib.pyplot as plt
@@ -110,10 +111,10 @@ def main(unused_argv):
     params["T_max"] = 5
 
 
-    params["R_SLA"] = 1
+    params["R_SLA"] = 0
     params["R_ST"] = 10
-    params["R_COST"] = -5
-    params["R_INT"] = -20
+    params["R_COST"] = -1
+    params["R_INT"] = -10
     params["L"] = 1
     params["obs_dist"] = " ".join(list(map(lambda x: str(x),[4/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,1/20,1/20,0])))
     params["obs_dist_intrusion"] = " ".join(list(map(lambda x: str(x),[1/20,1/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,4/20,0])))
@@ -140,8 +141,8 @@ def main(unused_argv):
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
     # learn_every=64
 
-    network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [512,512,512,512], 'memory_rl': 600000,
-                          'memory_sl': 10000000.0, 'rl_learning_rate': 0.1, 'sl_learning_rate': 0.005}
+    network_parameters = {'batch_size': 128, 'hidden_layers_sizes': [128,128,128], 'memory_rl': 600000,
+                          'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
     learn_every=64
 
     # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [256,256,256], 'memory_rl': 600000,
@@ -226,7 +227,12 @@ def main(unused_argv):
             attacker_stopping_probabilities_intrusion, attacker_stopping_probabilities_no_intrusion, \
             defender_stopping_probabilities, belief_space = get_stopping_probabilities(agents, l= l)
 
-            print(f"Episode:{ep+1}, AVG Exploitability:{expl}, losses: {losses}")
+            approx_exp_obj = OptimalStoppingGameApproxExp(pi_1 = agents[0], pi_2=agents[1], config=game.config,
+                                                          seed=seed)
+            approx_exp = approx_exp_obj.approx_exploitability()
+
+
+            print(f"Episode:{ep+1}, AVG Exploitability:{expl}, approximate exploitability: {approx_exp}, losses: {losses}")
             print(f"l={l}, t={1}, Belief space: {belief_space}")
             print(f"pi_2(S|b,0): {attacker_stopping_probabilities_no_intrusion}")
             print(f"pi_2(S|b,1): {attacker_stopping_probabilities_intrusion}")
@@ -234,7 +240,7 @@ def main(unused_argv):
             sys.stdout.flush()
 
             expl_array.append(expl)
-            # approx_expl_array.append(approxexpl[-1])
+            approx_expl_array.append(approx_exp)
             ep_array.append(ep)
 
 
