@@ -64,10 +64,8 @@ class OptimalStoppingGameUtil:
             if defender_action == 1 and attacker_action == 0:
                 return config.R_COST / config.L
             # Stop and Attack
-            # if defender_action == 1 and attacker_action == 1:
-            #     return config.R_COST / config.L + config.R_ST / l
             if defender_action == 1 and attacker_action == 1:
-                return config.R_COST / config.L
+                return config.R_COST / config.L + config.R_ST / l
 
         # Intrusion state
         if state == 1:
@@ -81,10 +79,8 @@ class OptimalStoppingGameUtil:
             if defender_action == 1 and attacker_action == 0:
                 return config.R_COST / config.L + config.R_ST / l
             # Stop and Stop
-            # if defender_action == 1 and attacker_action == 1:
-            #     return config.R_COST / config.L
             if defender_action == 1 and attacker_action == 1:
-                return 0
+                return config.R_COST / config.L
 
         raise ValueError("Invalid input, s:{}, a1:{}, a2:{}".format(state, defender_action, attacker_action))
 
