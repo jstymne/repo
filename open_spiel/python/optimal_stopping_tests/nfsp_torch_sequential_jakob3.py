@@ -156,17 +156,17 @@ def main(unused_argv):
 
     # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [256,256,256], 'memory_rl': 600000,
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.1, 'sl_learning_rate': 0.005}
-    #learn_every=64
+    learn_every=64
 
     # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.007, 'sl_learning_rate': 0.001}
     # learn_every=64
 
-    device_str="cuda:1"
+    # device_str="cuda:1"
     #device_str="cpu"
-    #device_str="cuda:0"
+    device_str="cuda:0"
 
-    seed = 357
+    seed = 139
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -195,8 +195,6 @@ def main(unused_argv):
         "epsilon_decay_duration": num_train_episodes,
         "epsilon_start": 0.06,
         "epsilon_end": 0.001,
-        "lr_decay_duration": num_train_episodes,
-        "lr_end": rl_learning_rate/10,
     }
 
     agents = [
@@ -214,8 +212,6 @@ def main(unused_argv):
                   stopping_game = True,
                   optimizer_str="adam",
                   device_str=device_str,
-                  sl_lr_decay_duration=num_train_episodes,
-                  sl_lr_end=sl_learning_rate/10,
                   **kwargs) for idx in range(num_players)
     ]
 
@@ -294,7 +290,7 @@ def evaluate_agents(agents, expl_array, game_value_array):
            defender_stopping_probabilities_1, belief_space = get_stopping_probabilities(agents, 1)
 
 
-    save_name = "Exploit_new_code1"
+    save_name = "Exploit_new_code3"
 
     if not os.path.isfile(save_name+".csv"):
         df = pd.DataFrame()

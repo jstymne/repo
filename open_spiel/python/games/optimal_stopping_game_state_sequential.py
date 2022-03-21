@@ -30,7 +30,6 @@ class OptimalStoppingGameStateSequential(pyspiel.State):
         self.latest_defender_action = 0
         self.latest_obs = 0
         self.b1 = config.initial_belief
-        print("hej")
 
         self.pi_2 = [
             [0.5,0.5],

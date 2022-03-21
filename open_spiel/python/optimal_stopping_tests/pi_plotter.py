@@ -48,9 +48,9 @@ plt.savefig('obs_dist_plot')
 
 #Basecase
 plt.figure()
-exploits = np.zeros((4,69))
-for i in range (1,5):
-    df = pd.read_csv("Exploit_weighted_dist"+ str(i) + ".csv")
+exploits = np.zeros((3,50))
+for i in range (1,4):
+    df = pd.read_csv("Exploit_new_code"+ str(i) + ".csv")
     exploit = df["exploit " ]
     exploits[i-1] = exploit
     
@@ -58,7 +58,7 @@ averages = np.average(exploits,0)
 errors = np.std(exploits,0)
 episodes = []
 for i in range(len(averages)):
-    episodes.append(10000 +i*5000)
+    episodes.append(10000 +i*10000)
 #print(errors)
 # Make the plot
 
@@ -72,7 +72,7 @@ plt.ylabel("Exploitability", fontweight ='bold', fontsize = 16)
  #       obs)
 plt.savefig("exploitability_smallgame_basecase")
 
-
+"""
 #Weird distribution
 plt.figure()
 exploits = np.zeros((4,29))
@@ -125,7 +125,7 @@ plt.ylabel("Exploitability", fontweight ='bold', fontsize = 16)
 #plt.xticks([r + barWidth/2 for r in range(len(obs))],
  #       obs)
 plt.savefig("exploitability_smallgame_rsla")
-
+"""
 ######################################################### Game value plots 
 
 
@@ -137,48 +137,42 @@ TODO
 
 
 
-
-
-
-x = np.linspace(0, 2 * np.pi, 400)
-y = np.sin(x ** 2)
 plt.figure()
 fig, axs = plt.subplots(2, 3)
 j = 0
-attacker_policies = [["pi1ar_a1","pi2ar_a1"], ["pi1ar_a2", "pi2ar_a2"],["pi1ar_a3","pi2ar_a3"]] 
-defender_policies = ["pi1ar_d1", "pi1ar_d2", "pi1ar_d3"]
-b_vec = np.arange(0,1.02,0.02)
+attacker_policies = [["attacker_stopping_probabilities_intrusion_3","attacker_stopping_probabilities_no_intrusion_3"], ["attacker_stopping_probabilities_intrusion_2","attacker_stopping_probabilities_no_intrusion_2"],["attacker_stopping_probabilities_intrusion_1","attacker_stopping_probabilities_no_intrusion_1"]] 
+defender_policies = ["defender_stopping_probabilities_3", "defender_stopping_probabilities_2", "defender_stopping_probabilities_1"]
+b_vec = np.linspace(0, 1, num=100)
 for policy in attacker_policies:
-    state0_probs = np.zeros((4,51))
-    state1_probs = np.zeros((4,51))
+    state0_probs = np.zeros((3,100))
+    state1_probs = np.zeros((3,100))
     
-    for i in range (1,5):
-        df = pd.read_csv("Exploit_weighted_dist"+ str(i) + "_belief.csv")
+    for i in range (1,4):
+        df = pd.read_csv("Exploit_new_code"+ str(i) + "_belief.csv")
         
         prob = df[policy[0]]
-        state0_probs[i-1] = 1-prob
+        state0_probs[i-1] = prob
         prob = df[policy[1]]
-        state1_probs[i-1] = 1-prob
+        state1_probs[i-1] = prob
     
     state0_averages_attacker = np.average(state0_probs,0)
     state0_errors_attacker = np.std(state0_probs,0)
-
     state1_averages_attacker = np.average(state1_probs,0)
     state1_errors_attacker = np.std(state1_probs,0)
-
-    axs[0, j].errorbar(b_vec, state0_averages_attacker, state0_errors_attacker, linestyle='None', marker='^', label = "Attacker stopping probability in state 0")
+    
+    axs[0, j].errorbar(b_vec, state0_averages_attacker, state0_errors_attacker, label = "Attacker stopping probability in state 0")
     axs[0, j].errorbar(b_vec, state1_averages_attacker, state1_errors_attacker, linestyle='None', marker='^', label = "Attacker stopping probability in state 1")
     j = j+1
 j = 0
 for policy in defender_policies:
     print(policy)
-    state_probs = np.zeros((4,51))
+    state_probs = np.zeros((3,100))
     
-    for i in range (1,5):
-        df = pd.read_csv("Exploit_weighted_dist"+ str(i) + "_belief.csv")
+    for i in range (1,4):
+        df = pd.read_csv("Exploit_new_code"+ str(i) + "_belief.csv")
         
         prob = df[policy]
-        state_probs[i-1] = 1-prob
+        state_probs[i-1] = prob
     
     state_averages_defender = np.average(state_probs,0)
     state_errors_defender = np.std(state_probs,0)

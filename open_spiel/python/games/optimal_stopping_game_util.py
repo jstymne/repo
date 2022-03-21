@@ -1,11 +1,8 @@
 from typing import List
 import numpy as np
-from pyrsistent import v
-from open_spiel.python import rl_environment
 from open_spiel.python.games.optimal_stopping_game_config import OptimalStoppingGameConfig
 from open_spiel.python.games.optimal_stopping_game_observation_type import OptimalStoppingGameObservationType
-from open_spiel.python.pytorch import nfsp
-import matplotlib.pyplot as plt
+
 
 class OptimalStoppingGameUtil:
 
@@ -44,7 +41,6 @@ class OptimalStoppingGameUtil:
                         config: OptimalStoppingGameConfig):
         """
         Computes the defender reward (negative of attacker reward)
-
         :param state: the state of the game
         :param defender_action: the defender action
         :param attacker_action: the attacker action
@@ -97,7 +93,6 @@ class OptimalStoppingGameUtil:
     def get_observation_type(obs: int, config: OptimalStoppingGameConfig) -> OptimalStoppingGameObservationType:
         """
         Returns the type of the observation
-
         :param obs: the observation to get the type of
         :return: observation type
         """
@@ -115,7 +110,6 @@ class OptimalStoppingGameUtil:
         A Bayesian filter to compute the belief of player 1
         of being in s_prime when observing o after taking action a in belief b given that the opponent follows
         strategy pi_2
-
         :param s_prime: the state to compute the belief of
         :param o: the observation
         :param a1: the action of player 1
@@ -127,29 +121,64 @@ class OptimalStoppingGameUtil:
         """
         l=l-1
         norm = 0
-        #print("belief " + str(b))
-        #print("pi_2 " + str(pi_2))
-        #print(l)
-        #print(config.T[2][:][1][1][:])
         for s in config.S:
             for a2 in config.A2:
-                #print("a2" + str(a2))
                 for s_prime_1 in config.S:
-                    
                     prob_1 = config.Z[a1][a2][s_prime_1][o]
-                    rest = b[s]*config.T[l][a1][a2][s][s_prime_1]*pi_2[s][a2]
-                    #print("prob1 " + str(prob_1))
-                    #print("rest " + str(rest))
-                    #if (prob_1 == 0 and rest == 1):
-                        #print("l " + str(l))
-                        #print("s " +str(s))
-                        #print("sprime" + str(s_prime_1))
-                        #print("a1 " + str(a1))
-                        #print("a2 " + str(a2))
-                        #print("obs " + str(o))
-                        #print(config.Z)
-                    
                     norm += b[s]*prob_1*config.T[l][a1][a2][s][s_prime_1]*pi_2[s][a2]
+
+        if norm == 0:
+            return 0
+        temp = 0
+
+        for s in config.S:
+            for a2 in config.A2:
+                temp += config.Z[a1][a2][s_prime][o]*config.T[l][a1][a2][s][s_prime]*b[s]*pi_2[s][a2]
+
+        b_prime_s_prime = temp/norm
+        assert b_prime_s_prime <=1
+        if s_prime == 2 and o != config.O[-1]:
+            assert b_prime_s_prime <= 0.01
+        return b_prime_s_prime
+
+    @staticmethod
+    def p_o_given_b_a1_a2(o: int, b: List, a1: int, a2: int, config: OptimalStoppingGameConfig) -> float:
+        """
+        Computes P[o|a,b]
+        :param o: the observation
+        :param b: the belief point
+        :param a1: the action of player 1
+        :param a2: the action of player 2
+        :param config: the game config
+        :return: the probability of observing o when taking action a in belief point b
+        """
+        prob = 0
+        for s in config.S:
+            for s_prime in config.S:
+                prob += b[s] * config.T[a1][a2][s][s_prime] * config.Z[a1][a2][s_prime][o]
+        assert prob < 1
+        return prob
+
+    @staticmethod
+    def next_belief(o: int, a1: int, b: List, pi_2: List, config: OptimalStoppingGameConfig, l: int,
+                    a2 : int = 0, s : int = 0) -> List:
+        """
+        Computes the next belief using a Bayesian filter
+        :param o: the latest observation
+        :param a1: the latest action of player 1
+        :param b: the current belief
+        :param pi_2: the policy of player 2
+        :param config: the game config
+        :param l: stops remaining
+        :param a2: the attacker action (for debugging, should be consistent with pi_2)
+        :param s: the true state (for debugging)
+        :return: the new belief
+        """
+        b_prime = np.zeros(len(config.S))
+        for s_prime in config.S:
+            b_prime[s_prime] = OptimalStoppingGameUtil.bayes_filter(s_prime=s_prime, o=o, a1=a1, b=b,
+                                                                    pi_2=pi_2, config=config, l=l)
+        if round(sum(b_prime), 2) != 1:
             print(f"error, b_prime:{b_prime}, o:{o}, a1:{a1}, b:{b}, pi_2:{pi_2}, "
                   f"a2: {a2}, s:{s}")
         assert round(sum(b_prime), 2) == 1
@@ -235,6 +264,61 @@ class OptimalStoppingGameUtil:
     #     v_2 = v_2 / mc_episodes
     #     return np.subtract(v1_vec,v2_vec)
     #
-    # @staticmethod
-    # def round_vec(vecs):
-    #     return list(map(lambda vec: list(map(lambda x: round(x, 2), vec)), vecs))
+    @staticmethod
+    def round_vec(vecs):
+         return list(map(lambda vec: list(map(lambda x: round(x, 2), vec)), vecs))
+    
+    @staticmethod
+    def round_vecs(vecs):
+        return list(map(lambda vec: list(map(lambda x: round(x, 2), vec)), vecs))
+
+
+    @staticmethod
+    def game_value_MC(agents, env):
+        print("Calculating game value")
+        mc_episodes = 1000
+
+        #print(time_step)
+        #Calculation of v
+
+        v = [0,0]
+        v_vec = []
+        for ep in range(mc_episodes):
+            
+            time_step = env.reset()
+            while not time_step.last():
+                player_id = time_step.observations["current_player"]
+                time_step.observations["info_state"] = OptimalStoppingGameUtil.round_vecs(time_step.observations["info_state"])
+
+                # print(f"time_step.rewards:{time_step.rewards}, player:{player_id}")
+                action_output = agents[player_id].step(time_step, is_evaluation = True)
+                s = env.get_state
+
+                # Update pi_2 if attacker
+                if player_id == 1:
+                    s.update_pi_2(agents[player_id].pi_2_stage)
+
+                action = [action_output.action]
+                time_step = env.step(action)
+
+            # Episode is over, step all agents with final info state.
+            agents[0].prep_next_episode_MC(time_step)
+            agents[1].prep_next_episode_MC(time_step)
+
+            #Episode over
+            v = v + s.returns()
+            v_vec.append(v[0] / (ep+1))
+        #print(v_1)
+
+        v = v / mc_episodes
+
+        print("Current game value is " + str(v[0]))
+
+        #print(v_vec)
+        #plt.plot(v_vec)
+        #plt.ylabel('some numbers')
+        #plt.show()
+        #plt.savefig('foo.png')
+
+
+        return v[0]

@@ -13,7 +13,6 @@ class OptimalStoppingGameSequential(pyspiel.Game):
     def __init__(self, params : dict = OptimalStoppingGameConfigSequential.default_params()):
         """
         Initializes the game
-
         :param params: user-supplied parameters of the game
         """
         config = OptimalStoppingGameConfigSequential.from_params_dict(params_dict=params)
@@ -24,7 +23,6 @@ class OptimalStoppingGameSequential(pyspiel.Game):
     def observation_tensor_size(self):
         """
         Method to conform with the pyspiel API
-
         :return: the size of the observation tensor of the game
         """
         return self.config.observation_tensor_size
@@ -32,7 +30,6 @@ class OptimalStoppingGameSequential(pyspiel.Game):
     def observation_tensor_shape(self):
         """
         Method to conform with the pyspiel API
-
         :return: shape of the observation tensor of the game
         """
         return self.config.observation_tensor_shape
@@ -40,7 +37,6 @@ class OptimalStoppingGameSequential(pyspiel.Game):
     def information_state_tensor_size(self):
         """
         Method to conform with the pyspiel API
-
         :return: the size of the information state tensor of the game
         """
         return self.config.information_state_tensor_size
@@ -48,7 +44,6 @@ class OptimalStoppingGameSequential(pyspiel.Game):
     def information_state_tensor_shape(self):
         """
         Method to conform with the pyspiel API
-
         :return: the size of the information state tensor of the game
         """
         return self.config.information_state_tensor_shape
@@ -62,7 +57,6 @@ class OptimalStoppingGameSequential(pyspiel.Game):
     def make_py_observer(self, iig_obs_type=None, params=None) -> OptimalStoppingGameObserver:
         """
         Method to conform with the pyspiel API
-
         :param iig_obs_type: the observation type
         :param params: extra parametes
         :return: an object that can be used to observe the game state

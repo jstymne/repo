@@ -7,12 +7,12 @@ from open_spiel.python.games.optimal_stopping_game_state_type import OptimalStop
 
 class OptimalStoppingGameConfigSequential:
 
+
     def __init__(self, p: float = 0.001, T_max: int = 5, L: int = 3, R_ST: int = 100, R_SLA: int = 10,
                  R_COST: int = -50, R_INT: int = -100, obs: str = "",
                  obs_dist: str = "", obs_dist_intrusion: str = "", initial_belief: str = "", use_beliefs: bool = False):
         """
         DTO class representing the configuration of the optimal stopping game
-
         :param p: the probability that the attacker is detected at any time-step
         :param T_max: the maximum length of the game (could be infinite)
         :param L: the number of stop actions of the defender
@@ -57,15 +57,10 @@ class OptimalStoppingGameConfigSequential:
         self.obs_dist_terminal[-1] = 1
         self.initial_belief = initial_belief
         self.num_players = 2
-
         self.observation_tensor_size = 3
         self.observation_tensor_shape = (3,)
         self.information_state_tensor_size = 3
         self.information_state_tensor_shape = (3,)
-        self.observation_tensor_size = 4
-        self.observation_tensor_shape = (4,)
-        self.information_state_tensor_size = 4
-        self.information_state_tensor_shape = (4,)
         self.params = self.params_dict()
         self.A1 = list(map(lambda x: x.value, self.get_actions()))
         self.A2 = list(map(lambda x: x.value, self.get_actions()))
@@ -74,6 +69,7 @@ class OptimalStoppingGameConfigSequential:
         self.Z = self.observation_tensor()
         self.T = []
         self.R = []
+
         for l in range(0, self.L):
             self.T.append(self.transition_tensor(l=l+1).tolist())
             self.R.append(self.reward_tensor(l=l+1).tolist())
@@ -87,7 +83,6 @@ class OptimalStoppingGameConfigSequential:
     def get_observation_chance_dist(self, state: int):
         """
         Computes a vector with observation probabilities for a chance node
-
         :param config: the game configuration
         :param state: the state of the game
         :return: a vector with tuples: (obs, prob)
@@ -105,7 +100,6 @@ class OptimalStoppingGameConfigSequential:
     def get_actions(self) -> List[int]:
         """
         Get the actions in the game. The actions are the same for both players
-
         :return: a list with the actions
         """
         return [OptimalStoppingGameAction.CONTINUE, OptimalStoppingGameAction.STOP]
@@ -113,7 +107,6 @@ class OptimalStoppingGameConfigSequential:
     def get_states(self) -> List[int]:
         """
         Get the states of the game
-
         :return: a list with the states
         """
         return [OptimalStoppingGameStateType.NO_INTRUSION,OptimalStoppingGameStateType.INTRUSION,
@@ -181,11 +174,11 @@ class OptimalStoppingGameConfigSequential:
                f"obs_dist:{self.obs_dist}, obs_dist_intrusion:{self.obs_dist_intrusion}, " \
                f"actions:{self.get_actions()}, initial_belief:{self.initial_belief}, use_beliefs:{self.use_beliefs}"
 
+
     @staticmethod
     def from_params_dict(params_dict: dict) -> "OptimalStoppingGameConfigSequential":
         """
         Creates a config object from a user-supplied dict with parameters
-
         :param params_dict: the dict with parameters
         :return: a config object corresponding to the parameters in the dict
         """

@@ -62,7 +62,10 @@ class NFSP(rl_agent.AbstractAgent):
                  stopping_game = False,
                  optimizer_str="sgd",
                  device_str ="cpu",
+                 sl_lr_end=0.001,
+                 sl_lr_decay_duration = int(1e6),
                  **kwargs):
+
         """Initialize the `NFSP` agent."""
         self.player_id = player_id
         self._num_actions = num_actions
@@ -81,6 +84,10 @@ class NFSP(rl_agent.AbstractAgent):
         # Step counter to keep track of learning.
         self._step_counter = 0
         self.pi_2_stage = None
+
+        self._sl_lr_start = sl_learning_rate
+        self._sl_lr_end= sl_lr_end
+        self._sl_lr_decay_duration = sl_lr_decay_duration
 
         # Inner RL agent
         kwargs.update({
@@ -205,6 +212,11 @@ class NFSP(rl_agent.AbstractAgent):
         if not is_evaluation:
             self._step_counter += 1
 
+            #Update the learning rate
+            for g in self.optimizer.param_groups:
+                g['lr'] = self._get_decayed_lr()
+            print("SL lr" + str(self._get_decayed_lr()))
+
             if self._step_counter % self._learn_every == 0:
                 self._last_sl_loss_value = self._learn()
                 # If learn step not triggered by rl policy, learn.
@@ -222,6 +234,20 @@ class NFSP(rl_agent.AbstractAgent):
                 self._prev_action = agent_output.action
 
         return agent_output
+   
+    def prep_next_episode_MC(self,time_step):
+        """Function needed for MC calculations to work properly"""
+        if time_step.last():
+            self._sample_episode_policy()
+            self._prev_timestep = None
+            self._prev_action = None
+            return
+
+    def _get_decayed_lr(self):
+        """Returns the evaluation or decayed learning rate."""
+        #Calculates the exponential decay according to lr = initial lr * exp(-k*number of episodes)
+        k = -np.log(self._sl_lr_end /self._sl_lr_start)/(self._sl_lr_decay_duration)
+        return self._sl_lr_start * np.exp(-k*self._step_counter)
 
     def _add_transition(self, time_step, agent_output):
         """Adds the new transition using `time_step` to the reservoir buffer.

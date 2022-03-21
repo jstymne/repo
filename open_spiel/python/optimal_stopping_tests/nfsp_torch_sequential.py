@@ -25,7 +25,6 @@ import pandas as pd
 def get_attacker_stage_policy_br(attacker_agent, num_states: int, num_actions: int, l: int, b: np.ndarray):
     """
     Extracts the attacker's stage policy from the NFSP agent
-
     :param attacker_agent: the NFSP attacker agent
     :param num_states: the number of states to consider for the stage policy
     :param num_actions: the number of actions to consider for the stage policy
@@ -154,7 +153,7 @@ def main(unused_argv):
 
     # device_str="cuda:1"
     device_str="cpu"
-    #device_str="cuda:0"
+    # device_str="cuda:0"
 
     seed = 999
     random.seed(seed)

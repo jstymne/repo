@@ -130,7 +130,9 @@ class DQN(rl_agent.AbstractAgent):
                epsilon_decay_duration=int(1e6),
                optimizer_str="sgd",
                loss_str="mse",
-               device_str ="cpu"
+               device_str ="cpu",
+               lr_end=0.001,
+               lr_decay_duration=int(1e6),
                ):
     """Initialize the DQN agent."""
 
@@ -152,6 +154,10 @@ class DQN(rl_agent.AbstractAgent):
     self._epsilon_start = epsilon_start
     self._epsilon_end = epsilon_end
     self._epsilon_decay_duration = epsilon_decay_duration
+
+    self._lr_start = learning_rate
+    self._lr_end= lr_end
+    self._lr_decay_duration = lr_decay_duration
 
     # TODO(author6) Allow for optional replay buffer config.
     if not isinstance(replay_buffer_capacity, int):
@@ -215,6 +221,12 @@ class DQN(rl_agent.AbstractAgent):
     # Don't mess up with the state during evaluation.
     if not is_evaluation:
       self._step_counter += 1
+
+      #Update the learning rate
+      for g in self._optimizer.param_groups:
+        g['lr'] = self._get_decayed_lr()
+      print("RL lr" + str(self._get_decayed_lr()))
+
 
       if self._step_counter % self._learn_every == 0:
         self._last_loss_value = self.learn()
@@ -292,6 +304,14 @@ class DQN(rl_agent.AbstractAgent):
         self._epsilon_end + (self._epsilon_start - self._epsilon_end) *
         (1 - decay_steps / self._epsilon_decay_duration)**power)
     return decayed_epsilon
+
+  
+  def _get_decayed_lr(self):
+    """Returns the evaluation or decayed learning rate."""
+    #Calculates the exponential decay according to lr = initial lr * exp(-k*number of episodes)
+    k = -np.log(self._lr_end /self._lr_start)/(self._lr_decay_duration)
+    return self._lr_start * np.exp(-k*self._step_counter)
+
 
   def learn(self):
     """Compute the loss on sampled transitions and perform a Q-network update.
