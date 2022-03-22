@@ -67,5 +67,6 @@ class OptimalStoppingGameSequential(pyspiel.Game):
 
 # Register the game with the OpenSpiel library
 pyspiel.register_game(
-    OptimalStoppingGameConfigSequential.from_params_dict(params_dict=OptimalStoppingGameConfigSequential.default_params()).create_game_type(),
+    OptimalStoppingGameConfigSequential.from_params_dict(
+        params_dict=OptimalStoppingGameConfigSequential.default_params()).create_game_type(),
     OptimalStoppingGameSequential)

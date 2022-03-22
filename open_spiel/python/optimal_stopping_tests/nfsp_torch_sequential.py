@@ -125,44 +125,17 @@ def main(unused_argv):
     info_state_size = env.observation_spec()["info_state"][0]
     num_actions = env.action_spec()["num_actions"]
 
-    # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [64, 64, 64], 'memory_rl': 600000,
-    #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
-
-    # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [512,512,512], 'memory_rl': 600000,
-    #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
-    # learn_every=64
-
-    # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
-    #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
-    # learn_every=64
-
-    # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [512,512,512,512], 'memory_rl': 600000,
-    #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
-    # learn_every=64
-
     network_parameters = {'batch_size': 128, 'hidden_layers_sizes': [128,128,128], 'memory_rl': 600000,
                           'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
     learn_every=64
 
-    # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [256,256,256], 'memory_rl': 600000,
-    #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.1, 'sl_learning_rate': 0.005}
-    # learn_every=64
-
-    # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
-    #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.007, 'sl_learning_rate': 0.001}
-    # learn_every=64
-
-    # device_str="cuda:1"
     device_str="cpu"
+    # device_str="cuda:1"
     # device_str="cuda:0"
-
     seed = 999
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-
-    # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [32, 32, 32], 'memory_rl': 60000,
-    #                       'memory_sl': 1000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.009}
 
     hidden_layers_sizes = network_parameters['hidden_layers_sizes']
     batch_size = network_parameters['batch_size']
@@ -222,13 +195,17 @@ def main(unused_argv):
                 print(e)
                 print("Some exception when calcluation exploitability")
 
-            l=3
+            l=game.config.L
             attacker_stopping_probabilities_intrusion, attacker_stopping_probabilities_no_intrusion, \
-            defender_stopping_probabilities, belief_space = get_stopping_probabilities(agents, l= l)
+            defender_stopping_probabilities, belief_space = get_stopping_probabilities(agents, l=l)
 
-            # Smaller values of br_timesteps causes faster calculation at the cost of worse approximation
-            approx_exp_obj = OptimalStoppingGameApproxExp(pi_1 = agents[0], pi_2=agents[1], config=game.config,
-                                                          seed=seed, br_timesteps=40000)
+            # Smaller values of br_training_timesteps causes faster calculation at the cost of worse approximation
+            approx_exp_obj = OptimalStoppingGameApproxExp(
+                pi_1 = agents[0], pi_2=agents[1], config=game.config,
+                seed=seed, br_training_timesteps=50000, br_evaluate_timesteps = 1000,
+                br_net_num_layers=3, br_net_num_hidden_neurons=128,
+                br_learning_rate = 3e-4, br_batch_size = 64,
+                br_steps_between_updates = 2048, br_training_device_str = device_str)
             approx_exp = approx_exp_obj.approx_exploitability()
 
 

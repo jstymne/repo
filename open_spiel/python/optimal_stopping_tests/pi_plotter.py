@@ -4,6 +4,8 @@ import pandas as pd
 
 #########################################################  Distribution plots
 
+
+
 plt.figure()
 
 obs = [0,1,2,3,4,5,6,7,8,9]
@@ -46,10 +48,12 @@ plt.savefig('obs_dist_plot')
 ######################################################### Exploitability plots 
 
 
+number_exp = 3
+
 #Basecase
 plt.figure()
-exploits = np.zeros((3,50))
-for i in range (1,4):
+exploits = np.zeros((number_exp,50))
+for i in range (1,number_exp+1):
     df = pd.read_csv("Exploit_new_code"+ str(i) + ".csv")
     exploit = df["exploit " ]
     exploits[i-1] = exploit
@@ -144,10 +148,10 @@ attacker_policies = [["attacker_stopping_probabilities_intrusion_3","attacker_st
 defender_policies = ["defender_stopping_probabilities_3", "defender_stopping_probabilities_2", "defender_stopping_probabilities_1"]
 b_vec = np.linspace(0, 1, num=100)
 for policy in attacker_policies:
-    state0_probs = np.zeros((2,100))
-    state1_probs = np.zeros((2,100))
+    state0_probs = np.zeros((number_exp,100))
+    state1_probs = np.zeros((number_exp,100))
     
-    for i in range (1,3):
+    for i in range (1,number_exp+1):
         df = pd.read_csv("Exploit_new_code"+ str(i) + "_belief.csv")
         
         stopping_nointrusion_prob = df[policy[1]]
@@ -166,9 +170,9 @@ for policy in attacker_policies:
 j = 0
 for policy in defender_policies:
     #print(policy)
-    state_probs = np.zeros((2,100))
+    state_probs = np.zeros((number_exp,100))
     
-    for i in range (1,3):
+    for i in range (1,number_exp+1):
         df = pd.read_csv("Exploit_new_code"+ str(i) + "_belief.csv")
         
         prob = df[policy]

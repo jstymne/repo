@@ -318,3 +318,4 @@ class OptimalStoppingGameUtil:
 
 
         return v[0]
+        return b_prime

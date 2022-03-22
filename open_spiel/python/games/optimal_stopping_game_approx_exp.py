@@ -1,7 +1,10 @@
 from typing import List, Tuple
 import gym
 import numpy as np
+import threading
+import time
 from stable_baselines3 import PPO
+from stable_baselines3.common.monitor import Monitor
 from open_spiel.python.games.optimal_stopping_game_config_sequential import OptimalStoppingGameConfigSequential
 from open_spiel.python.games.optimal_stopping_game_util import OptimalStoppingGameUtil
 
@@ -11,7 +14,10 @@ class OptimalStoppingGameApproxExp:
     Class for computing exploitability of a strategy profile (pi_1, pi_2)
     """
 
-    def __init__(self, pi_1, pi_2, config: OptimalStoppingGameConfigSequential, seed: int, br_timesteps = 30000):
+    def __init__(self, pi_1, pi_2, config: OptimalStoppingGameConfigSequential, seed: int,
+                 br_training_timesteps = 30000, br_evaluate_timesteps = 1000,
+                 br_net_num_layers=3, br_net_num_hidden_neurons = 128, br_learning_rate = 3e-4, br_batch_size = 64,
+                 br_steps_between_updates = 2048, br_training_device_str : str = "cpu"):
         """
         Initializes the object
 
@@ -19,7 +25,14 @@ class OptimalStoppingGameApproxExp:
         :param pi_2: the attacker NFSP strategy
         :param config: the game configuration
         :param seed: the random seed
-        :param br_timesteps: the number of time-steps to use when approximating best response strategies
+        :param br_training_timesteps: the number of time-steps to use when approximating best response strategies
+        :param br_evaluate_timesteps: number of time-steps for evaluating a learned BR policy
+        :param br_net_num_layers: number of hidden layers of the NN to learn an approximate BR
+        :param br_net_num_hidden_neurons: number of hidden neurons per layer of the NN to learn an approximate BR
+        :param br_learning_rate: the learning rate for learning approximate best response strategies
+        :param br_batch_size: the batch size for learning best response strategies
+        :param br_steps_between_updates: the number of steps between each update during learning of best response strategies
+        :param br_training_device_str: the device for the training of BR strategies
         """
         self.pi_1 = pi_1
         self.pi_2 = pi_2
@@ -27,7 +40,14 @@ class OptimalStoppingGameApproxExp:
         self.attacker_mdp = self._get_attacker_mdp()
         self.defender_pomdp = self._get_defender_pomdp()
         self.seed = seed
-        self.br_timesteps = br_timesteps
+        self.br_timesteps = br_training_timesteps
+        self.br_evaluate_timesteps = br_evaluate_timesteps
+        self.br_net_num_layers = br_net_num_layers
+        self.br_net_num_hidden_neurons = br_net_num_hidden_neurons
+        self.br_learning_rate = br_learning_rate
+        self.br_batch_size = br_batch_size
+        self.br_steps_between_updates = br_steps_between_updates
+        self.br_training_device_str = br_training_device_str
 
     def _get_attacker_mdp(self) -> gym.Env:
         """
@@ -59,20 +79,25 @@ class OptimalStoppingGameApproxExp:
 
         :return: the average reward of the approximate best response strategy
         """
-        policy_kwargs = dict(net_arch=[128, 128, 128])
+        policy_kwargs = dict(net_arch=[self.br_net_num_hidden_neurons]*self.br_net_num_layers)
         # log_dir = "./"
-        # env = Monitor(self.attacker_mdp, log_dir)
-        env = self.attacker_mdp
+        env = Monitor(self.attacker_mdp)
+        # env = self.attacker_mdp
         model = PPO("MlpPolicy", env, verbose=0,
-                    policy_kwargs=policy_kwargs, n_steps=2048, batch_size=64, learning_rate=3e-4, seed=self.seed)
+                    policy_kwargs=policy_kwargs, n_steps=self.br_steps_between_updates,
+                    batch_size=self.br_batch_size, learning_rate=self.br_learning_rate, seed=self.seed,
+                    device=self.br_training_device_str)
         print(" ** Starting training of an approximate best response strategy of the attacker ** ")
+        progress_thread = ProgressThread(env=env, max_steps=self.br_timesteps)
+        progress_thread.start()
         model.learn(total_timesteps=self.br_timesteps)
+        progress_thread.running = False
         print("** Training of an approximate best response strategy of the attacker complete **")
 
         obs = env.reset()
         r = 0
         returns = []
-        for i in range(1000):
+        for i in range(self.br_evaluate_timesteps):
             action, _states = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
             r += reward
@@ -82,7 +107,7 @@ class OptimalStoppingGameApproxExp:
                 obs = env.reset()
         avg_R = -np.mean(returns)
         print("Attacker approximate best response AVG Return:{}".format(avg_R))
-        return avg_R
+        return float(avg_R)
 
 
     def defender_br_avg_reward(self) -> float:
@@ -91,20 +116,25 @@ class OptimalStoppingGameApproxExp:
 
         :return: the average reward of the approximate best response strategy
         """
-        policy_kwargs = dict(net_arch=[128, 128, 128])
+        policy_kwargs = dict(net_arch=[self.br_net_num_hidden_neurons]*self.br_net_num_layers)
         # log_dir = "./"
-        # env = Monitor(self.defender_pomdp, log_dir)
-        env = self.defender_pomdp
-        model = PPO("MlpPolicy", env, verbose=0,
-                    policy_kwargs=policy_kwargs, n_steps=2048, batch_size=64, learning_rate=3e-4, seed=self.seed)
+        env = Monitor(self.defender_pomdp)
+        # env = self.defender_pomdp
+        model = PPO("MlpPolicy", env, verbose=1,
+                    policy_kwargs=policy_kwargs, n_steps=self.br_steps_between_updates,
+                    batch_size=self.br_batch_size, learning_rate=self.br_learning_rate, seed=self.seed,
+                    device=self.br_training_device_str)
         print("** Starting training of an approximate best response strategy of the defender **")
+        progress_thread = ProgressThread(env=env, max_steps=self.br_timesteps)
+        progress_thread.start()
         model.learn(total_timesteps=self.br_timesteps)
+        progress_thread.running = False
         print("** Training of an approximate best response strategy of the defender complete **")
 
         obs = env.reset()
         r = 0
         returns = []
-        for i in range(1000):
+        for i in range(self.br_evaluate_timesteps):
             action, _states = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
             r += reward
@@ -114,7 +144,7 @@ class OptimalStoppingGameApproxExp:
                 obs = env.reset()
         avg_R = np.mean(returns)
         print("Defender approximate best response AVG Return:{}".format(avg_R))
-        return avg_R
+        return float(avg_R)
 
 
 class StoppingGameAttackerMDPEnv(gym.Env):
@@ -357,3 +387,18 @@ class StoppingGameDefenderPOMDPEnv(gym.Env):
 
     def render(self):
         raise NotImplementedError("not supported")
+
+
+class ProgressThread(threading.Thread):
+
+    def __init__(self, env, max_steps):
+        threading.Thread.__init__(self)
+        self.env = env
+        self.max_steps = max_steps
+        self.running = True
+
+    def run(self) -> None:
+        while self.running:
+            time.sleep(5)
+            if self.running:
+                print(f"Learning a best response strategy, progress:{int(100*round(self.env.total_steps/self.max_steps,2))}%")
