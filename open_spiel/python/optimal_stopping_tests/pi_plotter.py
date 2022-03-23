@@ -47,14 +47,15 @@ plt.savefig('obs_dist_plot')
 
 ######################################################### Exploitability plots 
 
-
-number_exp = 3
+name_str = "Exploit_new_code_actual_noapprox"
+number_exp = 1
+number_ep = 300
 
 #Basecase
 plt.figure()
-exploits = np.zeros((number_exp,50))
+exploits = np.zeros((number_exp,number_ep))
 for i in range (1,number_exp+1):
-    df = pd.read_csv("Exploit_new_code"+ str(i) + ".csv")
+    df = pd.read_csv(name_str+ str(i) + ".csv")
     exploit = df["exploit " ]
     exploits[i-1] = exploit
     
@@ -66,7 +67,8 @@ for i in range(len(averages)):
 #print(errors)
 # Make the plot
 
-plt.errorbar(episodes, averages, errors, linestyle='None', marker='^')
+#plt.errorbar(episodes, averages, errors, linestyle='None', marker='^')
+plt.plot(episodes,averages)
 
 # Adding Xticks
 
@@ -133,9 +135,58 @@ plt.savefig("exploitability_smallgame_rsla")
 ######################################################### Game value plots 
 
 
-""""
-TODO
-"""
+
+#Basecase
+plt.figure()
+values = np.zeros((number_exp,number_ep))
+rand_values = np.zeros((number_exp,number_ep))
+heur_values = np.zeros((number_exp,number_ep))
+for i in range (1,number_exp+1):
+    df = pd.read_csv(name_str+ str(i) + ".csv")
+    value = df["value"]
+    game_value_array_random = df["game_value_array_random"]
+    game_value_array_heur = df["game_value_array_heur"]
+
+    values[i-1] = value
+    rand_values[i-1] = game_value_array_random
+    heur_values[i-1] = game_value_array_heur
+    
+value_averages = np.average(values,0)
+value_errors = np.std(values,0)
+
+random_value_averages = np.average(rand_values,0)
+random_value_errors = np.std(rand_values,0)
+
+heur_value_averages = np.average(heur_values,0)
+heur_value_errors = np.std(heur_values,0)
+
+
+episodes = []
+for i in range(len(averages)):
+    episodes.append(10000 +i*10000)
+#print(errors)
+# Make the plot
+
+#plt.errorbar(episodes, value_averages, value_errors, linestyle='None', marker='^', label = "Values")
+#plt.errorbar(episodes, random_value_averages, random_value_errors, linestyle='None', marker='^', label = "Rand values")
+#plt.errorbar(episodes, heur_value_averages, heur_value_errors, linestyle='None', marker='^', label = "Heuristic Values")
+
+plt.plot(episodes, value_averages, label = "Game Values")
+plt.plot(episodes, random_value_averages, label = "Random values")
+plt.plot(episodes, heur_value_averages, label = "Heuristic Values")
+
+
+# Adding Xticks
+
+plt.xlabel("Episodes", fontweight ='bold', fontsize = 16)
+plt.ylabel("Game value", fontweight ='bold', fontsize = 16)
+#plt.xticks([r + barWidth/2 for r in range(len(obs))],
+ #       obs)
+ax = plt.gca()
+plt.legend(fontsize = 16, bbox_to_anchor=(0.67, 1.15), bbox_transform=ax.transAxes)
+plt.legend()
+plt.savefig('value_plot')
+
 
 ######################################################### All Policy plots for basecase
 
@@ -148,11 +199,12 @@ attacker_policies = [["attacker_stopping_probabilities_intrusion_3","attacker_st
 defender_policies = ["defender_stopping_probabilities_3", "defender_stopping_probabilities_2", "defender_stopping_probabilities_1"]
 b_vec = np.linspace(0, 1, num=100)
 for policy in attacker_policies:
+    print(policy)
     state0_probs = np.zeros((number_exp,100))
     state1_probs = np.zeros((number_exp,100))
     
     for i in range (1,number_exp+1):
-        df = pd.read_csv("Exploit_new_code"+ str(i) + "_belief.csv")
+        df = pd.read_csv(name_str+ str(i) + "_belief.csv")
         
         stopping_nointrusion_prob = df[policy[1]]
         state0_probs[i-1] = stopping_nointrusion_prob
@@ -164,8 +216,10 @@ for policy in attacker_policies:
     state1_averages_attacker = np.average(state1_probs,0)
     state1_errors_attacker = np.std(state1_probs,0)
     
-    axs[0, j].errorbar(b_vec, state0_averages_attacker, state0_errors_attacker, label = "Attacker stopping probability in state 0")
-    axs[0, j].errorbar(b_vec, state1_averages_attacker, state1_errors_attacker, label = "Attacker stopping probability in state 1")
+    #axs[0, j].errorbar(b_vec, state0_averages_attacker, state0_errors_attacker, label = "Attacker stopping probability in state 0")
+    #axs[0, j].errorbar(b_vec, state1_averages_attacker, state1_errors_attacker, label = "Attacker stopping probability in state 1")
+    axs[0, j].plot(b_vec, state0_averages_attacker, label = "Attacker stopping probability in state 0")
+    axs[0, j].plot(b_vec, state1_averages_attacker, label = "Attacker stopping probability in state 1")
     j = j+1
 j = 0
 for policy in defender_policies:
@@ -173,7 +227,7 @@ for policy in defender_policies:
     state_probs = np.zeros((number_exp,100))
     
     for i in range (1,number_exp+1):
-        df = pd.read_csv("Exploit_new_code"+ str(i) + "_belief.csv")
+        df = pd.read_csv(name_str+ str(i) + "_belief.csv")
         
         prob = df[policy]
         state_probs[i-1] = prob
@@ -182,32 +236,40 @@ for policy in defender_policies:
     state_errors_defender = np.std(state_probs,0)
     #print(state_averages_defender)
 
-    axs[1, j].errorbar(b_vec, state_averages_defender, state_errors_defender, linestyle='None', marker='^', label = "Defender stopping probability independent of state", color='green')
+    axs[1, j].errorbar(b_vec, state_averages_defender, state_errors_defender, label = "Defender stopping probability independent of state", color='green')
     j = j+1
 
 
 
-axs[0, 0].set_title('Attacker policy for l = 1')
-axs[0, 1].set_title('Attacker policy for l = 2')
-axs[0, 2].set_title('Attacker policy for l = 3')
+axs[0, 0].set_title('Attacker policy for l = 3', fontsize = 10)
+axs[0, 1].set_title('Attacker policy for l = 2', fontsize = 10)
+axs[0, 2].set_title('Attacker policy for l = 1', fontsize = 10)
 
-axs[1, 0].set_title('Defender policy for l = 1')
-axs[1, 1].set_title('Defender policy for l = 2')
-axs[1, 2].set_title('Defender policy for l = 3')
+axs[1, 0].set_title('Defender policy for l = 3', fontsize = 10)
+axs[1, 1].set_title('Defender policy for l = 2', fontsize = 10)
+axs[1, 2].set_title('Defender policy for l = 1', fontsize = 10)
 
 for ax in axs.flat:
     ax.set(ylabel='Stopping probability', xlabel='Defender belief')
+
+plt.setp(axs, xticks=[0.0, 0.5, 1.0],
+       yticks=[0,  0.5, 1])
 
 #handles, labels = ax.get_legend_handles_labels()
 #fig.legend(handles, labels, loc='upper center')
 lines_labels = [fig.axes[0].get_legend_handles_labels(), fig.axes[4].get_legend_handles_labels() ]
 lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
 
-fig.legend(lines, labels)
+#fig.legend(lines, labels, fontsize = 10, bbox_to_anchor=(0.67, 2.5), bbox_transform=ax.transAxes)
+#plt.legend(fontsize = 16, )
 # Hide x labels and tick labels for top plots and y ticks for right plots.
 for ax in axs.flat:
     ax.label_outer()
+#fig.tight_layout()
+fig.subplots_adjust(bottom=0.3, wspace=0.33, hspace=0.4)
 
+ax.legend(lines , labels,loc='upper center',  fontsize = 10,
+             bbox_to_anchor=(-1, -0.4))
 plt.savefig("basecase_average_policies")
 
 

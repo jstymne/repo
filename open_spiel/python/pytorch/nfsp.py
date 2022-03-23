@@ -168,11 +168,13 @@ class NFSP(rl_agent.AbstractAgent):
         Returns:
           A `rl_agent.StepOutput` containing the action probs and chosen action.
         """
+        
         if self.player_id == 1:
             pi_2_stage = np.zeros((3, 2)).tolist()
             pi_2_stage[-1] = [0.5] * 2
         if self._mode == MODE.best_response:
             agent_output = self._rl_agent.step(time_step, is_evaluation)
+            
             if self.stopping_game and agent_output is not None and self.player_id == 1:
                 orig_s = int(time_step[0]["info_state"][1][-1])
                 for s in range(2):
@@ -233,6 +235,7 @@ class NFSP(rl_agent.AbstractAgent):
                 self._prev_timestep = time_step
                 self._prev_action = agent_output.action
 
+        
         return agent_output
    
     def prep_next_episode_MC(self,time_step):

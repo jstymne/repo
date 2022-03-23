@@ -111,10 +111,10 @@ def main(unused_argv):
     params["T_max"] = 5
 
 
-    params["R_SLA"] = 0
+    params["R_SLA"] = 1
     params["R_ST"] = 2
-    params["R_COST"] = -1
-    params["R_INT"] = -2
+    params["R_COST"] = -3
+    params["R_INT"] = -3
     #params["L"] = 3
     params["obs_dist"] = " ".join(list(map(lambda x: str(x),[4/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,1/20,1/20,0])))
     params["obs_dist_intrusion"] = " ".join(list(map(lambda x: str(x),[1/20,1/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,4/20,0])))
@@ -129,9 +129,11 @@ def main(unused_argv):
     # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [64, 64, 64], 'memory_rl': 600000,
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
 
-    network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [512,512,512], 'memory_rl': 600000,
-                           'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
+    #network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [512,512,512], 'memory_rl': 600000,
+    #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
     learn_every=64
+    
+    network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [64, 64, 64], 'memory_rl': 600000, 'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
 
     # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
@@ -156,17 +158,17 @@ def main(unused_argv):
 
     # network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [256,256,256], 'memory_rl': 600000,
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.1, 'sl_learning_rate': 0.005}
-    learn_every=64
+    #learn_every=64
 
     # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.007, 'sl_learning_rate': 0.001}
     # learn_every=64
 
-    # device_str="cuda:1"
+    #device_str="cuda:1"
     device_str="cpu"
     #device_str="cuda:0"
 
-    seed = 999
+    seed = 125
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -185,18 +187,20 @@ def main(unused_argv):
     approx_expl_array = []
     ep_array = []
     game_value_array = []
+    game_value_array_random = []
+    game_value_array_heur = []
 
     eval_every = 10000
     #hidden_layers_sizes = [64, 64, 64]
     num_train_episodes = int(3e6)
-    num_train_episodes = int(500000)
+    #num_train_episodes = int(350000)
     kwargs = {
         "replay_buffer_capacity": memory_rl,
         "epsilon_decay_duration": num_train_episodes,
         "epsilon_start": 0.06,
         "epsilon_end": 0.001,
         "lr_decay_duration": num_train_episodes,
-        "lr_end": rl_learning_rate/10,
+        "lr_end": rl_learning_rate/100,
     }
 
     agents = [
@@ -215,7 +219,7 @@ def main(unused_argv):
                   optimizer_str="adam",
                   device_str=device_str,
                   sl_lr_decay_duration=num_train_episodes,
-                  sl_lr_end=sl_learning_rate/10,
+                  sl_lr_end=sl_learning_rate/100,
                   **kwargs) for idx in range(num_players)
     ]
 
@@ -241,9 +245,16 @@ def main(unused_argv):
             l=3
             attacker_stopping_probabilities_intrusion, attacker_stopping_probabilities_no_intrusion, \
             defender_stopping_probabilities, belief_space = get_stopping_probabilities(agents, l= l)
-
-            v = OptimalStoppingGameUtil.game_value_MC(agents, env)
-            game_value_array.append(v)
+            
+            print("Game value calculation:")
+            
+            game_value = OptimalStoppingGameUtil.game_value_MC(agents, env)
+            print("Current game value: " + str(game_value))
+            game_value_against_random, game_value_against_heur = OptimalStoppingGameUtil.eval_defender_value(agents[0], env)
+            
+            game_value_array.append(game_value)
+            game_value_array_random.append(game_value_against_random)
+            game_value_array_heur.append(game_value_against_heur)
 
             print(f"Episode:{ep+1}, AVG Exploitability:{expl}, losses: {losses}")
             #print(f"l={l}, t={1}, Belief space: {belief_space}")
@@ -279,12 +290,13 @@ def main(unused_argv):
             agent.step(time_step)  
    
 
-    evaluate_agents(agents, expl_array, game_value_array)
+    evaluate_agents(agents, expl_array, game_value_array, game_value_array_random, game_value_array_heur)
 
     
 
-def evaluate_agents(agents, expl_array, game_value_array):
+def evaluate_agents(agents, expl_array, game_value_array, game_value_array_random, game_value_array_heur):
 
+    experiment_no = 2
 
     attacker_stopping_probabilities_intrusion_3, attacker_stopping_probabilities_no_intrusion_3, \
            defender_stopping_probabilities_3, belief_space = get_stopping_probabilities(agents, 3)
@@ -294,13 +306,15 @@ def evaluate_agents(agents, expl_array, game_value_array):
            defender_stopping_probabilities_1, belief_space = get_stopping_probabilities(agents, 1)
 
 
-    save_name = "Exploit_new_code2"
+    save_name = "Exploit_new_code_actual_noapprox" + str(experiment_no)
 
     if not os.path.isfile(save_name+".csv"):
         df = pd.DataFrame()
         df2 = pd.DataFrame()
         df["exploit " ] = expl_array
         df["value" ] = game_value_array
+        df["game_value_array_random" ] = game_value_array_random
+        df["game_value_array_heur" ] = game_value_array_heur
         
         df2["attacker_stopping_probabilities_intrusion_3"] = attacker_stopping_probabilities_intrusion_3
         df2["attacker_stopping_probabilities_no_intrusion_3"] = attacker_stopping_probabilities_no_intrusion_3
@@ -327,6 +341,8 @@ def evaluate_agents(agents, expl_array, game_value_array):
         df2 = pd.DataFrame()
         df["exploit " ] = expl_array
         df["value"] = game_value_array
+        df["game_value_array_random" ] = game_value_array_random
+        df["game_value_array_heur" ] = game_value_array_heur
         
         df2["attacker_stopping_probabilities_intrusion_3"] = attacker_stopping_probabilities_intrusion_3
         df2["attacker_stopping_probabilities_no_intrusion_3"] = attacker_stopping_probabilities_no_intrusion_3

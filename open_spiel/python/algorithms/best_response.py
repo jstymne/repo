@@ -178,9 +178,10 @@ class BestResponsePolicy(openspiel_policy.Policy):
                 state.information_state_string(self._player_id))
             return self.q_value(state, action)
         else:
-            return sum(p * self.q_value(state, a)
+            r = sum(p * self.q_value(state, a)
                        for a, p in self.transitions(state)
                        if p > self._cut_threshold)
+            return r
 
     def q_value(self, state, action):
         """Returns the value of the (state, action) to the best-responder."""

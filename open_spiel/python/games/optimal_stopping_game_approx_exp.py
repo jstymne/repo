@@ -120,7 +120,7 @@ class OptimalStoppingGameApproxExp:
         # log_dir = "./"
         env = Monitor(self.defender_pomdp)
         # env = self.defender_pomdp
-        model = PPO("MlpPolicy", env, verbose=1,
+        model = PPO("MlpPolicy", env, verbose=0,
                     policy_kwargs=policy_kwargs, n_steps=self.br_steps_between_updates,
                     batch_size=self.br_batch_size, learning_rate=self.br_learning_rate, seed=self.seed,
                     device=self.br_training_device_str)

@@ -2,7 +2,9 @@ from typing import List
 import numpy as np
 from open_spiel.python.games.optimal_stopping_game_config import OptimalStoppingGameConfig
 from open_spiel.python.games.optimal_stopping_game_observation_type import OptimalStoppingGameObservationType
-
+from open_spiel.python.games.optimal_stopping_game_eval_agent import OptimalStoppingEvalAgent
+import matplotlib.pyplot as plt
+from open_spiel.python.pytorch import nfsp
 
 class OptimalStoppingGameUtil:
 
@@ -180,86 +182,7 @@ class OptimalStoppingGameUtil:
         assert round(sum(b_prime), 2) == 1
         return b_prime
 
-    # @staticmethod
-    # def approx_exploitability(agents, env):
-    #
-    #     mc_episodes = 1000
-    #     #Calculation v_1 which is the expected value of defender BR vs attacker average
-    #     v_1 = [0,0]
-    #     v1_vec = []
-    #     for ep in range(mc_episodes):
-    #         time_step = env.reset()
-    #         while not time_step.last():
-    #             player_id = time_step.observations["current_player"]
-    #             time_step.observations["info_state"] = OptimalStoppingGameUtil.round_vec(time_step.observations["info_state"])
-    #
-    #             #best_response for defender
-    #             if player_id == 0:
-    #                 with agents[player_id].temp_mode_as(nfsp.MODE.best_response):
-    #                     action_output = agents[player_id].step(time_step, is_evaluation=True)
-    #             #average policy for attacker
-    #             if player_id == 1:
-    #                 with agents[player_id].temp_mode_as(nfsp.MODE.average_policy):
-    #                     action_output = agents[player_id].step(time_step, is_evaluation=True)
-    #
-    #             s = env.get_state
-    #             action = [action_output.action]
-    #             time_step = env.step(action)
-    #             #print(time_step)
-    #             #Update pi2
-    #             time_step.observations["info_state"] = OptimalStoppingGameUtil.round_vec(time_step.observations["info_state"])
-    #             current_l = time_step.observations["info_state"][0][0]
-    #             current_belief = time_step.observations["info_state"][0][1]
-    #             new_pi_2 = OptimalStoppingGameUtil.update_pi_2(agents[1],current_belief,current_l, temp_mode=nfsp.MODE.average_policy, is_temp_mode=True)
-    #             s.update_pi_2(new_pi_2)
-    #
-    #
-    #         #Episode over
-    #         agents[0].prep_next_episode_MC(time_step)
-    #
-    #         agents[1].prep_next_episode_MC(time_step)
-    #
-    #         v_1 = v_1 + s.returns()
-    #         v1_vec.append(v_1[0] / (ep+1))
-    #
-    #     v_1 = v_1 / mc_episodes
-    #     #Calculation v_2 which is the expected value of defender average vs attacker BR
-    #     v_2 = [0,0]
-    #     v2_vec = []
-    #     for ep in range(mc_episodes):
-    #         time_step = env.reset()
-    #         while not time_step.last():
-    #             player_id = time_step.observations["current_player"]
-    #             time_step.observations["info_state"] = OptimalStoppingGameUtil.round_vec(time_step.observations["info_state"])
-    #
-    #             #average policy for defender
-    #             if player_id == 0:
-    #                 with agents[player_id].temp_mode_as(nfsp.MODE.average_policy):
-    #                     action_output = agents[player_id].step(time_step, is_evaluation=True)
-    #             #BR policy for attacker
-    #             if player_id == 1:
-    #                 with agents[player_id].temp_mode_as(nfsp.MODE.best_response):
-    #                     action_output = agents[player_id].step(time_step, is_evaluation=True)
-    #
-    #             s = env.get_state
-    #             action = [action_output.action]
-    #             time_step = env.step(action)
-    #             time_step.observations["info_state"] = OptimalStoppingGameUtil.round_vec(time_step.observations["info_state"])
-    #             current_l = time_step.observations["info_state"][0][0]
-    #             current_belief = time_step.observations["info_state"][0][1]
-    #             new_pi_2 = OptimalStoppingGameUtil.update_pi_2(agents[1],current_belief,current_l, temp_mode=nfsp.MODE.best_response, is_temp_mode=True)
-    #             s.update_pi_2(new_pi_2)
-    #
-    #
-    #         #Episode over
-    #         agents[0].prep_next_episode_MC(time_step)
-    #         agents[1].prep_next_episode_MC(time_step)
-    #
-    #         v_2 = v_2 + s.returns()
-    #         v2_vec.append(v_2[0] / (ep+1))
-    #     v_2 = v_2 / mc_episodes
-    #     return np.subtract(v1_vec,v2_vec)
-    #
+       
     @staticmethod
     def round_vec(vecs):
          return list(map(lambda vec: list(map(lambda x: round(x, 2), vec)), vecs))
@@ -268,10 +191,18 @@ class OptimalStoppingGameUtil:
     def round_vecs(vecs):
         return list(map(lambda vec: list(map(lambda x: round(x, 2), vec)), vecs))
 
+    @staticmethod
+    def approx_exploitability(agents, env):
+        v_1 = OptimalStoppingGameUtil.game_value_MC(agents, env, defender_mode = nfsp.MODE.best_response, \
+            attacker_mode = nfsp.MODE.average_policy, use_defender_mode=True, use_attacker_mode= True)
+        
+        v_2 = OptimalStoppingGameUtil.game_value_MC(agents, env, defender_mode = nfsp.MODE.average_policy, \
+            attacker_mode = nfsp.MODE.best_response, use_defender_mode=True, use_attacker_mode= True)
+        
+        return (v_1-v_2)/2
 
     @staticmethod
-    def game_value_MC(agents, env):
-        print("Calculating game value")
+    def game_value_MC(agents, env, defender_mode = None, attacker_mode = None, use_defender_mode = False, use_attacker_mode = False):
         mc_episodes = 1000
 
         #print(time_step)
@@ -286,8 +217,21 @@ class OptimalStoppingGameUtil:
                 player_id = time_step.observations["current_player"]
                 time_step.observations["info_state"] = OptimalStoppingGameUtil.round_vecs(time_step.observations["info_state"])
 
+
+                if use_defender_mode and player_id == 0:
+                    with agents[player_id].temp_mode_as(defender_mode):
+                        action_output = agents[player_id].step(time_step, is_evaluation=True)
+                
+                elif use_attacker_mode and player_id == 1:
+                    with agents[player_id].temp_mode_as(attacker_mode):
+                        action_output = agents[player_id].step(time_step, is_evaluation=True)
+                
+                else: #Else dont use mode for that player
                 # print(f"time_step.rewards:{time_step.rewards}, player:{player_id}")
-                action_output = agents[player_id].step(time_step, is_evaluation = True)
+                    action_output = agents[player_id].step(time_step, is_evaluation = True)
+                
+                
+                
                 s = env.get_state
 
                 # Update pi_2 if attacker
@@ -308,7 +252,8 @@ class OptimalStoppingGameUtil:
 
         v = v / mc_episodes
 
-        print("Current game value is " + str(v[0]))
+        #print("Current game value is " + str(v[0]))
+        
 
         #print(v_vec)
         #plt.plot(v_vec)
@@ -318,4 +263,20 @@ class OptimalStoppingGameUtil:
 
 
         return v[0]
-        return b_prime
+
+    @staticmethod
+    def eval_defender_value(defender_agent, env):
+        print("Calculating game value against random attacker")
+        random_agent = OptimalStoppingEvalAgent(evaluation_type = "RandomAttacker")
+        value_against_random = OptimalStoppingGameUtil.game_value_MC(agents = [defender_agent, random_agent], env = env, \
+            defender_mode = nfsp.MODE.average_policy, use_attacker_mode= False, use_defender_mode=True)
+
+        print("Value against random attacker: " + str(value_against_random))
+
+        print("Calculating game value against heuristic attacker")
+        heur_agent = OptimalStoppingEvalAgent(evaluation_type = "HeuristicAttacker")
+        value_against_heur = OptimalStoppingGameUtil.game_value_MC(agents = [defender_agent, heur_agent], env = env, \
+            defender_mode = nfsp.MODE.average_policy, use_attacker_mode= False, use_defender_mode=True)
+        print("Value against heuristic attacker: " + str(value_against_heur))
+
+        return value_against_random, value_against_heur
