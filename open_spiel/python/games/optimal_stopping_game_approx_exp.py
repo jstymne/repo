@@ -70,7 +70,7 @@ class OptimalStoppingGameApproxExp:
         print("--- Calculating approximate exploitability ---")
         avg_attacker_br_R = self.attacker_br_avg_reward()
         avg_defender_br_R = self.defender_br_avg_reward()
-        approx_expl = abs(avg_attacker_br_R + avg_defender_br_R)
+        approx_expl = abs(avg_attacker_br_R + avg_defender_br_R)/2
         return approx_expl
 
     def attacker_br_avg_reward(self) -> float:
@@ -86,7 +86,7 @@ class OptimalStoppingGameApproxExp:
         model = PPO("MlpPolicy", env, verbose=0,
                     policy_kwargs=policy_kwargs, n_steps=self.br_steps_between_updates,
                     batch_size=self.br_batch_size, learning_rate=self.br_learning_rate, seed=self.seed,
-                    device=self.br_training_device_str)
+                    device=self.br_training_device_str, gamma=1)
         print(" ** Starting training of an approximate best response strategy of the attacker ** ")
         progress_thread = ProgressThread(env=env, max_steps=self.br_timesteps)
         progress_thread.start()
@@ -120,10 +120,10 @@ class OptimalStoppingGameApproxExp:
         # log_dir = "./"
         env = Monitor(self.defender_pomdp)
         # env = self.defender_pomdp
-        model = PPO("MlpPolicy", env, verbose=1,
+        model = PPO("MlpPolicy", env, verbose=0,
                     policy_kwargs=policy_kwargs, n_steps=self.br_steps_between_updates,
                     batch_size=self.br_batch_size, learning_rate=self.br_learning_rate, seed=self.seed,
-                    device=self.br_training_device_str)
+                    device=self.br_training_device_str, gamma=1)
         print("** Starting training of an approximate best response strategy of the defender **")
         progress_thread = ProgressThread(env=env, max_steps=self.br_timesteps)
         progress_thread.start()

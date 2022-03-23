@@ -21,7 +21,15 @@ import random
 import torch
 import matplotlib.pyplot as plt
 import pandas as pd
+import csv
 
+
+def save_csv_files(times, exp, approx_exp, file_name):
+    with open(file_name, "w") as f:
+        writer = csv.writer(f)
+        writer.writerow(["t", "exp", "approx_exp"])
+        for i in range(len(times)):
+            writer.writerow([times[i], exp[i], approx_exp[i]])
 
 def get_attacker_stage_policy_br(attacker_agent, num_states: int, num_actions: int, l: int, b: np.ndarray):
     """
@@ -115,7 +123,7 @@ def main(unused_argv):
     params["R_ST"] = 10
     params["R_COST"] = -1
     params["R_INT"] = -10
-    params["L"] = 1
+    params["L"] = 3
     params["obs_dist"] = " ".join(list(map(lambda x: str(x),[4/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,1/20,1/20,0])))
     params["obs_dist_intrusion"] = " ".join(list(map(lambda x: str(x),[1/20,1/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,4/20,0])))
 
@@ -149,10 +157,12 @@ def main(unused_argv):
     approx_expl_array = []
     ep_array = []
 
-    eval_every = 10000
+    eval_every = 20000
+    save_every = 20000
+    min_epsiodes_before_eval = 19000
     #hidden_layers_sizes = [64, 64, 64]
     num_train_episodes = int(3e6)
-    num_train_episodes = int(1000000000)
+    num_train_episodes = int(10000000000)
     kwargs = {
         "replay_buffer_capacity": memory_rl,
         "epsilon_decay_duration": num_train_episodes,
@@ -181,7 +191,7 @@ def main(unused_argv):
     expl_policies_avg = NFSPPolicies(env, agents, nfsp.MODE.average_policy)
 
     for ep in range(num_train_episodes):
-        if (ep + 1) % eval_every == 0 and ep+1 > 9000:
+        if (ep + 1) % eval_every == 0 and ep+1 > min_epsiodes_before_eval:
 
             # print("calculating approx expl..")
             # approxexpl = OptimalStoppingGameUtil.approx_exploitability(agents, env)
@@ -196,30 +206,33 @@ def main(unused_argv):
                 print(e)
                 print("Some exception when calcluation exploitability")
 
-            l=game.config.L
-            attacker_stopping_probabilities_intrusion, attacker_stopping_probabilities_no_intrusion, \
-            defender_stopping_probabilities, belief_space = get_stopping_probabilities(agents, l=l)
+            # l=game.config.L
+            # attacker_stopping_probabilities_intrusion, attacker_stopping_probabilities_no_intrusion, \
+            # defender_stopping_probabilities, belief_space = get_stopping_probabilities(agents, l=l)
 
             # Smaller values of br_training_timesteps causes faster calculation at the cost of worse approximation
             approx_exp_obj = OptimalStoppingGameApproxExp(
                 pi_1 = agents[0], pi_2=agents[1], config=game.config,
-                seed=seed, br_training_timesteps=50000, br_evaluate_timesteps = 1000,
+                seed=seed, br_training_timesteps=300000, br_evaluate_timesteps = 15000,
                 br_net_num_layers=3, br_net_num_hidden_neurons=128,
-                br_learning_rate = 3e-4, br_batch_size = 64,
-                br_steps_between_updates = 2048, br_training_device_str = device_str)
+                br_learning_rate = 0.0001, br_batch_size = 128,
+                br_steps_between_updates = 4096, br_training_device_str = device_str)
             approx_exp = approx_exp_obj.approx_exploitability()
 
 
             print(f"Episode:{ep+1}, AVG Exploitability:{expl}, approximate exploitability: {approx_exp}, losses: {losses}")
-            print(f"l={l}, t={1}, Belief space: {belief_space}")
-            print(f"pi_2(S|b,0): {attacker_stopping_probabilities_no_intrusion}")
-            print(f"pi_2(S|b,1): {attacker_stopping_probabilities_intrusion}")
-            print(f"pi_1(S|b,-): {defender_stopping_probabilities}")
+            # print(f"l={l}, t={1}, Belief space: {belief_space}")
+            # print(f"pi_2(S|b,0): {attacker_stopping_probabilities_no_intrusion}")
+            # print(f"pi_2(S|b,1): {attacker_stopping_probabilities_intrusion}")
+            # print(f"pi_1(S|b,-): {defender_stopping_probabilities}")
             sys.stdout.flush()
 
             expl_array.append(expl)
             approx_expl_array.append(approx_exp)
-            ep_array.append(ep)
+            ep_array.append(ep+1)
+
+        if (ep + 1) % save_every == 0 and ep+1 > min_epsiodes_before_eval:
+            save_csv_files(times=ep_array, exp=expl_array, approx_exp=approx_expl_array, file_name="results.csv")
 
 
         time_step = env.reset()
