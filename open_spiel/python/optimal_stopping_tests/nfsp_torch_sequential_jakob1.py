@@ -248,7 +248,8 @@ def main(unused_argv):
             
             print("Game value calculation:")
             
-            game_value = OptimalStoppingGameUtil.game_value_MC(agents, env)
+            game_value = OptimalStoppingGameUtil.game_value_MC(agents, env, defender_mode = nfsp.MODE.average_policy, \
+                attacker_mode = nfsp.MODE.average_policy, use_defender_mode=True, use_attacker_mode= True)
             print("Current game value: " + str(game_value))
             game_value_against_random, game_value_against_heur = OptimalStoppingGameUtil.eval_defender_value(agents[0], env)
             
