@@ -39,6 +39,7 @@ class OptimalStoppingGameApproxExp:
         self.pi_1 = pi_1
         self.pi_2 = pi_2
         self.config = config
+        self.br_training_device_str = br_training_device_str
         self.attacker_mdp = self._get_attacker_mdp()
         self.defender_pomdp = self._get_defender_pomdp()
         self.seed = seed
@@ -49,13 +50,13 @@ class OptimalStoppingGameApproxExp:
         self.br_learning_rate = br_learning_rate
         self.br_batch_size = br_batch_size
         self.br_steps_between_updates = br_steps_between_updates
-        self.br_training_device_str = br_training_device_str
 
     def _get_attacker_mdp(self) -> gym.Env:
         """
         :return: the attacker MDP for calculating a best response strategy
         """
-        env = StoppingGameAttackerMDPEnv(config=self.config, pi_1=self.pi_1, pi_2=self.pi_2)
+        env = StoppingGameAttackerMDPEnv(config=self.config, pi_1=self.pi_1, pi_2=self.pi_2,
+                                         device_str=self.br_training_device_str)
         return env
 
     def _get_defender_pomdp(self) -> gym.Env:
@@ -156,7 +157,7 @@ class StoppingGameAttackerMDPEnv(gym.Env):
     of the attacker
     """
 
-    def __init__(self, config: OptimalStoppingGameConfigSequential, pi_1, pi_2):
+    def __init__(self, config: OptimalStoppingGameConfigSequential, pi_1, pi_2, device_str):
         """
         Initializes the environment
 
@@ -176,10 +177,12 @@ class StoppingGameAttackerMDPEnv(gym.Env):
         self.num_actions = 2
         self.t = 0
         self.ppo_pi_2 = None
+        self.device_str = device_str
+        self.device = torch.device(self.device_str)
 
     def get_attacker_dist(self, obs):
         obs = np.array([obs])
-        actions, values, log_prob = self.ppo_pi_2.policy.forward(obs=torch.tensor(obs))
+        actions, values, log_prob = self.ppo_pi_2.policy.forward(obs=torch.tensor(obs).to(self.device))
         action = actions[0]
         if action == 1:
             stop_prob = math.exp(log_prob)
@@ -193,13 +196,6 @@ class StoppingGameAttackerMDPEnv(gym.Env):
 
         :return: the attacker's stage policy
         """
-        # actions, values, log_prob = self.ppo_pi_2.policy.forward(obs=torch.tensor(np.array([[self.l,self.b[1],1]])))
-        # action = actions[0]
-        # if action == 1:
-        #     stop_prob = math.exp(log_prob)
-        # else:
-        #     stop_prob = 1-math.exp(log_prob)
-
         pi_2_stage = np.zeros((3, 2)).tolist()
         pi_2_stage[-1] = [0.5]*2
         for s in range(2):
@@ -219,11 +215,8 @@ class StoppingGameAttackerMDPEnv(gym.Env):
         a1 = self.defender_action()
         r = -self.config.R[self.l-1][a1][a2][self.s]
         T = self.config.T[self.l-1]
-        old_s = self.s
         self.s = self.sample_next_state(a1=a1, a2=a2, T=T)
         o = max(self.config.O)
-        old_b = self.b
-        pi_2_stage = None
         if self.s == 2 or self.t >= self.config.T_max:
             done = True
         else:
@@ -231,11 +224,9 @@ class StoppingGameAttackerMDPEnv(gym.Env):
             pi_2_stage = self.get_attacker_stage_policy_avg()
             self.b = OptimalStoppingGameUtil.next_belief(o=o, a1=a1, b=self.b, pi_2=pi_2_stage,
                                                          config=self.config, l=self.l, a2=a2)
-        old_l = self.l
         self.l = self.l-a1
         info = {"o": o, "s": self.s}
         self.t += 1
-        # print(f"a1:{a1}, a2:{a2}, old_s:{old_s}, new_s:{self.s}, old_l: {old_l}, l.{self.l}, old_b:{old_b[1]}, new_b:{self.b[1]}, r:{r}, pi_2_stage:{pi_2_stage}, o:{o}")
         return np.array([self.l, self.b[1], self.s]), r, done, info
 
     def defender_action(self) -> int:
@@ -245,8 +236,6 @@ class StoppingGameAttackerMDPEnv(gym.Env):
         :return: the sampled defender action
         """
         stop_prob = self.pi_1._act([self.l, self.b[1], self.b[1]], legal_actions = [0, 1])[1][1]
-        # if self.b[1] >= 0.8:
-        #     print(f"defender stop_prob:{stop_prob}, b1:{self.b[1]}, input:{[self.l, self.b[1], self.b[1]]}")
         if np.random.rand() <= stop_prob:
             return 1
         else:
