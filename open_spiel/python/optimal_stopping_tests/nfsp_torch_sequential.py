@@ -21,7 +21,15 @@ import random
 import torch
 import matplotlib.pyplot as plt
 import pandas as pd
+import csv
 
+
+def save_csv_files(times, exp, approx_exp, file_name):
+    with open(file_name, "w") as f:
+        writer = csv.writer(f)
+        writer.writerow(["t", "exp", "approx_exp"])
+        for i in range(len(times)):
+            writer.writerow([times[i], exp[i], approx_exp[i]])
 
 def get_attacker_stage_policy_br(attacker_agent, num_states: int, num_actions: int, l: int, b: np.ndarray):
     """
@@ -110,11 +118,11 @@ def main(unused_argv):
     params["T_max"] = 5
 
 
-    params["R_SLA"] = 0
-    params["R_ST"] = 10
-    params["R_COST"] = -1
-    params["R_INT"] = -10
-    params["L"] = 1
+    params["R_SLA"] = 1
+    params["R_ST"] = 2
+    params["R_COST"] = -3
+    params["R_INT"] = -3
+    params["L"] = 3
     params["obs_dist"] = " ".join(list(map(lambda x: str(x),[4/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,1/20,1/20,0])))
     params["obs_dist_intrusion"] = " ".join(list(map(lambda x: str(x),[1/20,1/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,4/20,0])))
 
@@ -125,7 +133,7 @@ def main(unused_argv):
     info_state_size = env.observation_spec()["info_state"][0]
     num_actions = env.action_spec()["num_actions"]
 
-    network_parameters = {'batch_size': 128, 'hidden_layers_sizes': [128,128,128], 'memory_rl': 600000,
+    network_parameters = {'batch_size': 128, 'hidden_layers_sizes': [256,256,256,256,256], 'memory_rl': 600000,
                           'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
     learn_every=64
 
@@ -149,9 +157,14 @@ def main(unused_argv):
     ep_array = []
 
     eval_every = 10000
+    save_every = 10000
+    # eval_every = 100
+    # save_every = 100
+    min_epsiodes_before_eval = 9000
+    # min_epsiodes_before_eval = 2
     #hidden_layers_sizes = [64, 64, 64]
     num_train_episodes = int(3e6)
-    num_train_episodes = int(1000000000)
+    num_train_episodes = int(10000000000)
     kwargs = {
         "replay_buffer_capacity": memory_rl,
         "epsilon_decay_duration": num_train_episodes,
@@ -180,15 +193,11 @@ def main(unused_argv):
     expl_policies_avg = NFSPPolicies(env, agents, nfsp.MODE.average_policy)
 
     for ep in range(num_train_episodes):
-        if (ep + 1) % eval_every == 0 and ep+1 > 9000:
-
-            # print("calculating approx expl..")
-            # approxexpl = OptimalStoppingGameUtil.approx_exploitability(agents, env)
-            # print("approx eplx = " + str(approxexpl[-1]))
-
-            losses = [agent.loss for agent in agents]
+        if (ep + 1) % eval_every == 0 and ep+1 > min_epsiodes_before_eval:
+            losses = []
             print("Calculating exact exploitability.. (Don't do this for large games!)")
             try:
+                losses = [agent.loss for agent in agents]
                 expl = exploitability.exploitability(env.game, expl_policies_avg)
             except Exception as e:
                 expl = 0
@@ -198,27 +207,30 @@ def main(unused_argv):
             l=game.config.L
             attacker_stopping_probabilities_intrusion, attacker_stopping_probabilities_no_intrusion, \
             defender_stopping_probabilities, belief_space = get_stopping_probabilities(agents, l=l)
-
-            # Smaller values of br_training_timesteps causes faster calculation at the cost of worse approximation
-            approx_exp_obj = OptimalStoppingGameApproxExp(
-                pi_1 = agents[0], pi_2=agents[1], config=game.config,
-                seed=seed, br_training_timesteps=50000, br_evaluate_timesteps = 1000,
-                br_net_num_layers=3, br_net_num_hidden_neurons=128,
-                br_learning_rate = 3e-4, br_batch_size = 64,
-                br_steps_between_updates = 2048, br_training_device_str = device_str)
-            approx_exp = approx_exp_obj.approx_exploitability()
-
-
-            print(f"Episode:{ep+1}, AVG Exploitability:{expl}, approximate exploitability: {approx_exp}, losses: {losses}")
             print(f"l={l}, t={1}, Belief space: {belief_space}")
             print(f"pi_2(S|b,0): {attacker_stopping_probabilities_no_intrusion}")
             print(f"pi_2(S|b,1): {attacker_stopping_probabilities_intrusion}")
             print(f"pi_1(S|b,-): {defender_stopping_probabilities}")
+
+            # Smaller values of br_training_timesteps causes faster calculation at the cost of worse approximation
+            approx_exp_obj = OptimalStoppingGameApproxExp(
+                pi_1 = agents[0], pi_2=agents[1], config=game.config,
+                seed=seed, br_training_timesteps=100000, br_evaluate_timesteps = 15000,
+                br_net_num_layers=3, br_net_num_hidden_neurons=256,
+                br_learning_rate = 0.0001, br_batch_size = 128,
+                br_steps_between_updates = 4096, br_training_device_str = device_str)
+            approx_exp = approx_exp_obj.approx_exploitability()
+
+
+            print(f"Episode:{ep+1}, AVG Exploitability:{expl}, approximate exploitability: {approx_exp}, losses: {losses}")
             sys.stdout.flush()
 
             expl_array.append(expl)
             approx_expl_array.append(approx_exp)
-            ep_array.append(ep)
+            ep_array.append(ep+1)
+
+        if (ep + 1) % save_every == 0 and ep+1 > min_epsiodes_before_eval:
+            save_csv_files(times=ep_array, exp=expl_array, approx_exp=approx_expl_array, file_name="results.csv")
 
 
         time_step = env.reset()
