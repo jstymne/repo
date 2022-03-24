@@ -139,7 +139,7 @@ def main(unused_argv):
     learn_every=64
 
     device_str="cpu"
-    # device_str="cuda:1"
+    device_str="cuda:1"
     # device_str="cuda:0"
     seed = 999
     random.seed(seed)
@@ -157,11 +157,11 @@ def main(unused_argv):
     approx_expl_array = []
     ep_array = []
 
-    eval_every = 10000
-    save_every = 10000
+    eval_every = 20000
+    save_every = 20000
     # eval_every = 100
     # save_every = 100
-    min_epsiodes_before_eval = 9000
+    min_epsiodes_before_eval = 19000
     # min_epsiodes_before_eval = 2
     #hidden_layers_sizes = [64, 64, 64]
     num_train_episodes = int(3e6)
