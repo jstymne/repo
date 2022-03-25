@@ -267,14 +267,14 @@ class OptimalStoppingGameUtil:
     @staticmethod
     def eval_defender_value(defender_agent, env):
         print("Calculating game value against random attacker")
-        random_agent = OptimalStoppingEvalAgent(evaluation_type = "RandomAttacker")
+        random_agent = OptimalStoppingEvalAgent(player_id = 1, num_actions = 2, evaluation_type = "RandomAttacker")
         value_against_random = OptimalStoppingGameUtil.game_value_MC(agents = [defender_agent, random_agent], env = env, \
             defender_mode = nfsp.MODE.average_policy, use_attacker_mode= False, use_defender_mode=True)
 
         print("Value against random attacker: " + str(value_against_random))
 
         print("Calculating game value against heuristic attacker")
-        heur_agent = OptimalStoppingEvalAgent(evaluation_type = "HeuristicAttacker")
+        heur_agent = OptimalStoppingEvalAgent(player_id = 1, num_actions = 2, evaluation_type = "HeuristicAttacker")
         value_against_heur = OptimalStoppingGameUtil.game_value_MC(agents = [defender_agent, heur_agent], env = env, \
             defender_mode = nfsp.MODE.average_policy, use_attacker_mode= False, use_defender_mode=True)
         print("Value against heuristic attacker: " + str(value_against_heur))

@@ -133,7 +133,7 @@ def main(unused_argv):
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
     learn_every=64
     
-    network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [64, 64, 64], 'memory_rl': 600000, 'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
+    network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [64, 64, 64], 'memory_rl': 600000, 'memory_sl': 20000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
 
     # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
@@ -192,7 +192,7 @@ def main(unused_argv):
 
     eval_every = 10000
     #hidden_layers_sizes = [64, 64, 64]
-    num_train_episodes = int(3e6)
+    num_train_episodes = int(5e6)
     #num_train_episodes = int(350000)
     kwargs = {
         "replay_buffer_capacity": memory_rl,
@@ -200,7 +200,7 @@ def main(unused_argv):
         "epsilon_start": 0.06,
         "epsilon_end": 0.001,
         "lr_decay_duration": num_train_episodes,
-        "lr_end": rl_learning_rate/100,
+        "lr_end": rl_learning_rate,
     }
 
     agents = [
@@ -219,7 +219,7 @@ def main(unused_argv):
                   optimizer_str="adam",
                   device_str=device_str,
                   sl_lr_decay_duration=num_train_episodes,
-                  sl_lr_end=sl_learning_rate/100,
+                  sl_lr_end=sl_learning_rate,
                   **kwargs) for idx in range(num_players)
     ]
 
@@ -307,7 +307,7 @@ def evaluate_agents(agents, expl_array, game_value_array, game_value_array_rando
            defender_stopping_probabilities_1, belief_space = get_stopping_probabilities(agents, 1)
 
 
-    save_name = "Exploit_new_code_actual_noapprox" + str(experiment_no)
+    save_name = "Exploit_new_code_base_with_good_params" + str(experiment_no)
 
     if not os.path.isfile(save_name+".csv"):
         df = pd.DataFrame()

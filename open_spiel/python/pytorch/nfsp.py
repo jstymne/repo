@@ -215,8 +215,9 @@ class NFSP(rl_agent.AbstractAgent):
             self._step_counter += 1
 
             #Update the learning rate
-            for g in self.optimizer.param_groups:
-                g['lr'] = self._get_decayed_lr()
+            if not self._sl_lr_end == self._sl_lr_start:
+                for g in self.optimizer.param_groups:
+                    g['lr'] = self._get_decayed_lr()
             #print("SL lr" + str(self._get_decayed_lr()))
 
             if self._step_counter % self._learn_every == 0:

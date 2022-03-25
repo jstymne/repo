@@ -131,9 +131,9 @@ def main(unused_argv):
 
     #network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [512,512,512], 'memory_rl': 600000,
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
-    learn_every=64
+    learn_every=128
     
-    network_parameters = {'batch_size': 256, 'hidden_layers_sizes': [64, 64, 64], 'memory_rl': 600000, 'memory_sl': 20000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
+    network_parameters = {'batch_size': 128, 'hidden_layers_sizes': [128], 'memory_rl': 200000, 'memory_sl': 2000000, 'rl_learning_rate': 0.1, 'sl_learning_rate': 0.005}
 
     # network_parameters = {'batch_size': 512, 'hidden_layers_sizes': [1024,1024,1024,1024,1024], 'memory_rl': 600000,
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.01, 'sl_learning_rate': 0.005}
@@ -164,11 +164,11 @@ def main(unused_argv):
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.007, 'sl_learning_rate': 0.001}
     # learn_every=64
 
-    #device_str="cuda:1"
-    device_str="cpu"
+    device_str="cuda:1"
+    #device_str="cpu"
     #device_str="cuda:0"
 
-    seed = 125
+    seed = 357
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -192,7 +192,7 @@ def main(unused_argv):
 
     eval_every = 10000
     #hidden_layers_sizes = [64, 64, 64]
-    num_train_episodes = int(5e6)
+    num_train_episodes = int(1e6)
     #num_train_episodes = int(350000)
     kwargs = {
         "replay_buffer_capacity": memory_rl,
@@ -201,6 +201,7 @@ def main(unused_argv):
         "epsilon_end": 0.001,
         "lr_decay_duration": num_train_episodes,
         "lr_end": rl_learning_rate,
+        "update_target_network_every": 300
     }
 
     agents = [
@@ -216,7 +217,7 @@ def main(unused_argv):
                   min_buffer_size_to_learn = 2000,
                   learn_every = learn_every,
                   stopping_game = True,
-                  optimizer_str="adam",
+                  optimizer_str="sgd",
                   device_str=device_str,
                   sl_lr_decay_duration=num_train_episodes,
                   sl_lr_end=sl_learning_rate,
@@ -243,16 +244,14 @@ def main(unused_argv):
                 print("Some exception when calcluation exploitability")
 
             l=3
-            attacker_stopping_probabilities_intrusion, attacker_stopping_probabilities_no_intrusion, \
-            defender_stopping_probabilities, belief_space = get_stopping_probabilities(agents, l= l)
-            
+           
             print("Game value calculation:")
             
             game_value = OptimalStoppingGameUtil.game_value_MC(agents, env, defender_mode = nfsp.MODE.average_policy, \
                 attacker_mode = nfsp.MODE.average_policy, use_defender_mode=True, use_attacker_mode= True)
             print("Current game value: " + str(game_value))
             game_value_against_random, game_value_against_heur = OptimalStoppingGameUtil.eval_defender_value(agents[0], env)
-
+            
             game_value_array.append(game_value)
             game_value_array_random.append(game_value_against_random)
             game_value_array_heur.append(game_value_against_heur)
@@ -297,7 +296,7 @@ def main(unused_argv):
 
 def evaluate_agents(agents, expl_array, game_value_array, game_value_array_random, game_value_array_heur):
 
-    experiment_no = 2
+    experiment_no = 1
 
     attacker_stopping_probabilities_intrusion_3, attacker_stopping_probabilities_no_intrusion_3, \
            defender_stopping_probabilities_3, belief_space = get_stopping_probabilities(agents, 3)
@@ -307,7 +306,7 @@ def evaluate_agents(agents, expl_array, game_value_array, game_value_array_rando
            defender_stopping_probabilities_1, belief_space = get_stopping_probabilities(agents, 1)
 
 
-    save_name = "Exploit_new_code_base_with_good_params" + str(experiment_no)
+    save_name = "Exploit_new_code_base_with_good_params_leduc" + str(experiment_no)
 
     if not os.path.isfile(save_name+".csv"):
         df = pd.DataFrame()

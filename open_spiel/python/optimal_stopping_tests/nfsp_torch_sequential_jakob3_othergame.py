@@ -113,7 +113,7 @@ def main(unused_argv):
 
     params["R_SLA"] = 1
     params["R_ST"] = 2
-    params["R_COST"] = -3
+    params["R_COST"] = -2
     params["R_INT"] = -3
     #params["L"] = 3
     params["obs_dist"] = " ".join(list(map(lambda x: str(x),[4/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,1/20,1/20,0])))
@@ -165,10 +165,10 @@ def main(unused_argv):
     # learn_every=64
 
     #device_str="cuda:1"
-    device_str="cpu"
-    #device_str="cuda:0"
+    #device_str="cpu"
+    device_str="cuda:0"
 
-    seed = 125
+    seed = 999
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -297,7 +297,7 @@ def main(unused_argv):
 
 def evaluate_agents(agents, expl_array, game_value_array, game_value_array_random, game_value_array_heur):
 
-    experiment_no = 2
+    experiment_no = 3
 
     attacker_stopping_probabilities_intrusion_3, attacker_stopping_probabilities_no_intrusion_3, \
            defender_stopping_probabilities_3, belief_space = get_stopping_probabilities(agents, 3)
@@ -307,7 +307,7 @@ def evaluate_agents(agents, expl_array, game_value_array, game_value_array_rando
            defender_stopping_probabilities_1, belief_space = get_stopping_probabilities(agents, 1)
 
 
-    save_name = "Exploit_new_code_base_with_good_params" + str(experiment_no)
+    save_name = "Exploit_new_code_base_with_good_params_othergame" + str(experiment_no)
 
     if not os.path.isfile(save_name+".csv"):
         df = pd.DataFrame()

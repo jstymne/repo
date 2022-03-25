@@ -117,7 +117,6 @@ def main(unused_argv):
     params["R_ST"] = 2
     params["R_COST"] = -3
     params["R_INT"] = -3
-
     #params["L"] = 3
     params["obs_dist"] = " ".join(list(map(lambda x: str(x),[4/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,1/20,1/20,0])))
     params["obs_dist_intrusion"] = " ".join(list(map(lambda x: str(x),[1/20,1/20,2/20,2/20,2/20,2/20,2/20,2/20,2/20,4/20,0])))
@@ -250,11 +249,11 @@ def main(unused_argv):
                 br_net_num_layers=3, br_net_num_hidden_neurons=128,
                 br_learning_rate = 3e-4, br_batch_size = 64,
                 br_steps_between_updates = 2048, br_training_device_str = device_str)
-            #approx_exp = approx_exp_obj.approx_exploitability()
+            approx_exp = approx_exp_obj.approx_exploitability()
             #approx_exp = OptimalStoppingGameUtil.approx_exploitability(agents,env)
             #approx_exp = approx_exp_obj.approx_exploitability()
-            print("Approx expl calculation:")
-            approx_exp = OptimalStoppingGameUtil.approx_exploitability(agents,env)
+            #print("Approx expl calculation:")
+            #approx_exp = OptimalStoppingGameUtil.approx_exploitability(agents,env)
             print(approx_exp)
             print("Game value calculation:")
 
@@ -317,7 +316,7 @@ def evaluate_agents(agents, expl_array, approx_expl_array, game_value_array, gam
            defender_stopping_probabilities_1, belief_space = get_stopping_probabilities(agents, 1)
 
 
-    save_name = "Exploit_new_code_approx" + str(experiment_no)
+    save_name = "Exploit_new_code_good_params_approx" + str(experiment_no)
 
     if not os.path.isfile(save_name+".csv"):
         df = pd.DataFrame()

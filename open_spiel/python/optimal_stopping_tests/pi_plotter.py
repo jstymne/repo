@@ -1,6 +1,76 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from torch import bitwise_left_shift
+from open_spiel.python.games.optimal_stopping_game_eval_agent import OptimalStoppingEvalAgent
+from open_spiel.python.games.optimal_stopping_game_player_type import OptimalStoppingGamePlayerType
+from open_spiel.python import rl_environment
+
+######################################################### Eval agent policy plots
+
+
+fig, axs = plt.subplots(1, 2)
+
+belief_space = np.linspace(0, 1, num=100)
+random_attacker_stopping_probabilities_no_intrusion = []
+random_attacker_stopping_probabilities_intrusion = []
+heur_attacker_stopping_probabilities_no_intrusion = []
+heur_attacker_stopping_probabilities_intrusion = []
+
+random_agent = OptimalStoppingEvalAgent(player_id = 1, num_actions = 2, evaluation_type = "RandomAttacker")
+heur_agent = OptimalStoppingEvalAgent(player_id = 1, num_actions = 2, evaluation_type = "HeuristicAttacker")
+
+temp_ts_intrusion = {}
+temp_ts_no_intrusion = {}
+l = 3
+for b in belief_space:
+    o = {
+        'info_state': [[l, b, b],
+                        [l, b, 0]],
+        'legal_actions': [[],[0, 1]],
+        'current_player': OptimalStoppingGamePlayerType.ATTACKER,
+        "serialized_state": []
+    }
+    temp_ts_no_intrusion= rl_environment.TimeStep(
+        observations= o, rewards=None, discounts=None, step_type=None)
+
+    random_attacker_stopping_probabilities_no_intrusion.append(random_agent.step(temp_ts_no_intrusion).probs[1]+0.005)
+    heur_attacker_stopping_probabilities_no_intrusion.append(heur_agent.step(temp_ts_no_intrusion).probs[1])
+
+    temp_ts_intrusion = temp_ts_no_intrusion
+    temp_ts_intrusion.observations["info_state"] = [[l, b, b], [l, b, 1]]
+    random_attacker_stopping_probabilities_intrusion.append(random_agent.step(temp_ts_intrusion).probs[1])
+    heur_attacker_stopping_probabilities_intrusion.append(heur_agent.step(temp_ts_intrusion).probs[1])
+    
+
+axs[0].plot(belief_space, random_attacker_stopping_probabilities_no_intrusion, label = "Attacker stopping probability in state 0", color = "blue")
+axs[0].plot(belief_space, random_attacker_stopping_probabilities_intrusion, label = "Attacker stopping probability in state 1", color = "orange")
+
+
+axs[1].plot(belief_space, heur_attacker_stopping_probabilities_no_intrusion, label = "Attacker stopping probability in state 0", color = "blue")
+axs[1].plot(belief_space, heur_attacker_stopping_probabilities_intrusion, label = "Attacker stopping probability in state 1", color = "orange")
+
+axs[0].set_title('Random attacker policies', fontsize = 10)
+axs[1].set_title('Heuristic attacker policies', fontsize = 10)
+
+for ax in axs.flat:
+    ax.set(ylabel='Stopping probability', xlabel='Defender belief')
+
+plt.setp(axs, xticks=[0.0, 0.5, 1.0],
+       yticks=[0,  0.5, 1])
+
+
+for ax in axs.flat:
+    ax.label_outer()
+#fig.tight_layout()
+fig.subplots_adjust(bottom=0.3, wspace=0.33, hspace=0.4)
+
+ax.legend(loc='upper center',  fontsize = 10,
+             bbox_to_anchor=(-0.2, -0.2))
+
+plt.savefig("eval_agent_policies")
+
+
 
 #########################################################  Distribution plots
 
@@ -47,28 +117,34 @@ plt.savefig('obs_dist_plot')
 
 ######################################################### Exploitability plots 
 
-name_str = "Exploit_new_code_actual_noapprox"
-number_exp = 1
-number_ep = 300
+name_str = "Exploit_new_code_base_with_good_params"
+#name_str = "big_game_test"
+number_exp = 2
+number_ep = 500
 
 #Basecase
 plt.figure()
 exploits = np.zeros((number_exp,number_ep))
+approx_exploits = np.zeros((number_exp,number_ep))
 for i in range (1,number_exp+1):
     df = pd.read_csv(name_str+ str(i) + ".csv")
     exploit = df["exploit " ]
     exploits[i-1] = exploit
+    #approx_exploit = df["approx_expl_array" ]
+    #approx_exploits[i-1] = approx_exploit
     
-averages = np.average(exploits,0)
-errors = np.std(exploits,0)
+exploit_averages = np.average(exploits,0)
+exploit_errors = np.std(exploits,0)
+#approx_averages = np.average(abs(approx_exploits),0)
+#approx_errors = np.std(approx_exploits,0)
 episodes = []
-for i in range(len(averages)):
+for i in range(len(exploit_averages)):
     episodes.append(10000 +i*10000)
 #print(errors)
 # Make the plot
-
-#plt.errorbar(episodes, averages, errors, linestyle='None', marker='^')
-plt.plot(episodes,averages)
+plt.plot(episodes,exploit_averages)
+#plt.errorbar(episodes, approx_averages, approx_errors, linestyle='None', marker='^')
+#plt.plot(episodes,approx_averages)
 
 # Adding Xticks
 
@@ -134,8 +210,6 @@ plt.savefig("exploitability_smallgame_rsla")
 """
 ######################################################### Game value plots 
 
-
-
 #Basecase
 plt.figure()
 values = np.zeros((number_exp,number_ep))
@@ -162,7 +236,7 @@ heur_value_errors = np.std(heur_values,0)
 
 
 episodes = []
-for i in range(len(averages)):
+for i in range(len(exploit_averages)):
     episodes.append(10000 +i*10000)
 #print(errors)
 # Make the plot
@@ -199,7 +273,6 @@ attacker_policies = [["attacker_stopping_probabilities_intrusion_3","attacker_st
 defender_policies = ["defender_stopping_probabilities_3", "defender_stopping_probabilities_2", "defender_stopping_probabilities_1"]
 b_vec = np.linspace(0, 1, num=100)
 for policy in attacker_policies:
-    print(policy)
     state0_probs = np.zeros((number_exp,100))
     state1_probs = np.zeros((number_exp,100))
     
@@ -218,8 +291,8 @@ for policy in attacker_policies:
     
     #axs[0, j].errorbar(b_vec, state0_averages_attacker, state0_errors_attacker, label = "Attacker stopping probability in state 0")
     #axs[0, j].errorbar(b_vec, state1_averages_attacker, state1_errors_attacker, label = "Attacker stopping probability in state 1")
-    axs[0, j].plot(b_vec, state0_averages_attacker, label = "Attacker stopping probability in state 0")
-    axs[0, j].plot(b_vec, state1_averages_attacker, label = "Attacker stopping probability in state 1")
+    axs[0, j].plot(b_vec, state0_averages_attacker, label = "Attacker stopping probability in state 0", color = "blue")
+    axs[0, j].plot(b_vec, state1_averages_attacker, label = "Attacker stopping probability in state 1", color = "orange")
     j = j+1
 j = 0
 for policy in defender_policies:
@@ -236,7 +309,9 @@ for policy in defender_policies:
     state_errors_defender = np.std(state_probs,0)
     #print(state_averages_defender)
 
-    axs[1, j].errorbar(b_vec, state_averages_defender, state_errors_defender, label = "Defender stopping probability independent of state", color='green')
+    #axs[1, j].errorbar(b_vec, state_averages_defender, state_errors_defender, label = "Defender stopping probability independent of state", color='green')
+    axs[1, j].plot(b_vec, state_averages_defender, label = "Defender stopping probability independent of state", color='green')
+
     j = j+1
 
 
@@ -274,7 +349,7 @@ plt.savefig("basecase_average_policies")
 
 
 ######################################################### All Policy plots for basecase
-
+"""
 
 # Set position of bar on X axis
 
@@ -316,3 +391,5 @@ plt.savefig("errortest2")
 
 #ax = plt.gca()
 #plt.savefig('obs_dist_plot')
+"""
+print("Graphs created")
