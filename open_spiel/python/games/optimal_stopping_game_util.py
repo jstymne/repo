@@ -134,9 +134,11 @@ class OptimalStoppingGameUtil:
                 temp += config.Z[a1][a2][s_prime][o]*config.T[l][a1][a2][s][s_prime]*b[s]*pi_2[s][a2]
 
         b_prime_s_prime = temp/norm
-        assert b_prime_s_prime <=1
+        if round(b_prime_s_prime,2) > 1:
+            print(f"b_prime_s_prime >= 1: {b_prime_s_prime}, a1:{a1}, s_prime:{s_prime}, l:{l}, o:{o}, pi_2:{pi_2}")
+        assert round(b_prime_s_prime,2) <=1
         if s_prime == 2 and o != config.O[-1]:
-            assert b_prime_s_prime <= 0.01
+            assert round(b_prime_s_prime,2) <= 0.01
         return b_prime_s_prime
 
     @staticmethod

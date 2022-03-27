@@ -139,7 +139,7 @@ def main(unused_argv):
     learn_every=64
 
     device_str="cpu"
-    device_str="cuda:1"
+    # device_str="cuda:1"
     # device_str="cuda:0"
     seed = 999
     random.seed(seed)
