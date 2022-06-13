@@ -74,7 +74,7 @@ class OptimalStoppingGameApproxExp:
         avg_attacker_br_R = self.attacker_br_avg_reward()
         avg_defender_br_R = self.defender_br_avg_reward()
         approx_expl = abs(avg_attacker_br_R + avg_defender_br_R)/2
-        return approx_expl
+        return approx_expl, avg_attacker_br_R, avg_defender_br_R
 
     def attacker_br_avg_reward(self) -> float:
         """
@@ -109,7 +109,7 @@ class OptimalStoppingGameApproxExp:
                 returns.append(r)
                 r = 0
                 obs = env.reset()
-        avg_R = -np.mean(returns)
+        avg_R = np.mean(returns)
         print("Attacker approximate best response AVG Return:{}".format(avg_R))
         return float(avg_R)
 

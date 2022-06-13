@@ -192,7 +192,7 @@ def main(unused_argv):
 
     eval_every = 10000
     #hidden_layers_sizes = [64, 64, 64]
-    num_train_episodes = int(1e6)
+    num_train_episodes = int(3e6)
     #num_train_episodes = int(350000)
     kwargs = {
         "replay_buffer_capacity": memory_rl,

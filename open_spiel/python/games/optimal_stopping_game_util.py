@@ -200,8 +200,10 @@ class OptimalStoppingGameUtil:
         
         v_2 = OptimalStoppingGameUtil.game_value_MC(agents, env, defender_mode = nfsp.MODE.average_policy, \
             attacker_mode = nfsp.MODE.best_response, use_defender_mode=True, use_attacker_mode= True)
-        
-        return (v_1-v_2)/2
+        print("NFSP exploit: " + str(abs((v_1-v_2))/2))
+        print("BR attacker cum. reward NFSP: " + str(-v_2))
+        print("BR defender cum. reward NFSP: " + str(v_1))
+        return abs((v_1-v_2))/2
 
     @staticmethod
     def game_value_MC(agents, env, defender_mode = None, attacker_mode = None, use_defender_mode = False, use_attacker_mode = False):
@@ -218,7 +220,6 @@ class OptimalStoppingGameUtil:
             while not time_step.last():
                 player_id = time_step.observations["current_player"]
                 time_step.observations["info_state"] = OptimalStoppingGameUtil.round_vecs(time_step.observations["info_state"])
-
 
                 if use_defender_mode and player_id == 0:
                     with agents[player_id].temp_mode_as(defender_mode):
@@ -253,9 +254,9 @@ class OptimalStoppingGameUtil:
         #print(v_1)
 
         v = v / mc_episodes
-
+        print(v)
         #print("Current game value is " + str(v[0]))
-        
+       
 
         #print(v_vec)
         #plt.plot(v_vec)

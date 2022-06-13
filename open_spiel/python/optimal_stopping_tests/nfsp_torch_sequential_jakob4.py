@@ -164,11 +164,11 @@ def main(unused_argv):
     #                       'memory_sl': 10000000.0, 'rl_learning_rate': 0.007, 'sl_learning_rate': 0.001}
     # learn_every=64
 
-    #device_str="cuda:1"
-    device_str="cpu"
+    device_str="cuda:1"
+    #device_str="cpu"
     #device_str="cuda:0"
 
-    seed = 125
+    seed = 855
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -297,7 +297,7 @@ def main(unused_argv):
 
 def evaluate_agents(agents, expl_array, game_value_array, game_value_array_random, game_value_array_heur):
 
-    experiment_no = 2
+    experiment_no = 4
 
     attacker_stopping_probabilities_intrusion_3, attacker_stopping_probabilities_no_intrusion_3, \
            defender_stopping_probabilities_3, belief_space = get_stopping_probabilities(agents, 3)

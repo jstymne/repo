@@ -168,7 +168,7 @@ def main(unused_argv):
     device_str="cpu"
     #device_str="cuda:0"
 
-    seed = 125
+    seed = 11
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
